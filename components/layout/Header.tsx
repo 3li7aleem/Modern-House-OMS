@@ -150,7 +150,7 @@ const Header: React.FC = () => {
             <input 
               type="text"
               placeholder={t('header.search_placeholder') || 'Search globally...'}
-              className="w-full pl-10 pr-4 rtl:pl-4 rtl:pr-10 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
+              className="w-full pl-10 pr-16 rtl:pl-16 rtl:pr-10 py-2 bg-slate-100/80 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-transparent focus:border-slate-300 dark:focus:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-primary/20 transition-all text-slate-900 dark:text-white"
               value={globalSearchQuery || ''}
               onChange={(e) => {
                 setGlobalSearchQuery(e.target.value);
@@ -158,6 +158,9 @@ const Header: React.FC = () => {
               }}
               onFocus={() => setIsSearchOpen(true)}
             />
+            <span className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold font-mono text-slate-400 bg-white dark:bg-slate-700/80 rounded-md border border-slate-200 dark:border-slate-600 absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 pointer-events-none shadow-2xs">
+              Ctrl K
+            </span>
             
             {isSearchOpen && globalSearchQuery && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 max-h-96 overflow-y-auto z-50">

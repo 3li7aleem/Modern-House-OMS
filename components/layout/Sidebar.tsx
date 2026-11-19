@@ -28,17 +28,17 @@ const Sidebar: React.FC = () => {
                   e.preventDefault();
                   setActiveScreen(item.screen);
                 }}
-                className={`group relative flex items-center py-2.5 text-sm font-medium transition-colors duration-200 rounded-lg ${
+                className={`group relative flex items-center py-2 text-sm font-medium transition-all duration-200 rounded-xl ${
                   activeScreen === item.screen 
-                  ? 'bg-primary text-white shadow-soft dark:bg-dark-sidebar-hover dark:text-primary dark:shadow-none' 
-                  : 'text-text-secondary dark:text-dark-text-secondary hover:bg-sidebar-hover dark:hover:bg-dark-sidebar-hover hover:text-text-primary dark:hover:text-dark-text-primary'
-                } ${isSidebarOpen ? 'px-4' : 'px-2 justify-center'}`}
+                  ? 'bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-950 font-semibold' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                } ${isSidebarOpen ? 'px-3.5' : 'px-2 justify-center'}`}
               >
-                <div className={`relative flex items-center justify-center transition-transform group-hover:scale-110 ${isSidebarOpen ? '' : 'mx-auto'}`}>
+                <div className={`relative flex items-center justify-center transition-transform group-hover:scale-105 ${isSidebarOpen ? '' : 'mx-auto'}`}>
                   {item.icon}
                 </div>
 
-                {isSidebarOpen && <span className="mx-4 font-medium tracking-wide">{t(`sidebar.nav.${item.screen}`)}</span>}
+                {isSidebarOpen && <span className="mx-3 text-[13px] tracking-tight">{t(`sidebar.nav.${item.screen}`)}</span>}
               </a>
             ))}
           </nav>
