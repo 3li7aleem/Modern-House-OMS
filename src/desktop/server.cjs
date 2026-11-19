@@ -506,22 +506,36 @@ if (require.main === module) {
   }
   const primaryIp = ips.find(ip => ip.startsWith('192.168.')) || ips[0] || 'localhost';
 
+  const targetPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 3050;
+
   const tabletServer = createTabletServer({
     database: db,
     rendererDir,
-    port: 3000
+    port: targetPort
   });
 
-  tabletServer.listen(3000).then(({ port }) => {
-    console.log(`\n======================================================`);
-    console.log(` Modern House OMS — خادم التابلت والشبكة المحلية`);
-    console.log(`======================================================`);
-    console.log(`\n1. افتح متصفح Chrome على تابلت الأندرويد.`);
-    console.log(`2. ادخل على الرابط التالي:`);
-    console.log(`   http://${primaryIp}:${port}`);
-    console.log(`\n3. اضغط على (⋮) ثم اختر "تثبيت التطبيق" (Install App).`);
-    console.log(`======================================================\n`);
-  }).catch(err => {
+  const tryListen = (p) => {
+    return tabletServer.listen(p).then(({ port }) => {
+      console.log(`\n======================================================`);
+      console.log(` Modern House OMS — خادم التابلت والشبكة المحلية`);
+      console.log(`======================================================`);
+      console.log(`\n1. الرابط المحلي على جهاز الكمبيوتر:`);
+      console.log(`   http://localhost:${port}`);
+      console.log(`\n2. رابط التابلت والجوال داخل المعرض (Wi-Fi):`);
+      console.log(`   http://${primaryIp}:${port}`);
+      console.log(`\n3. اضغط على (⋮) ثم اختر "تثبيت التطبيق" (Install App).`);
+      console.log(`======================================================\n`);
+      return { port };
+    }).catch(err => {
+      if (err.code === 'EADDRINUSE' && p === 3000) {
+        console.log(`Port 3000 in use, falling back to 3001...`);
+        return tryListen(3001);
+      }
+      throw err;
+    });
+  };
+
+  tryListen(targetPort).catch(err => {
     console.error('Error starting tablet server:', err);
   });
 }
