@@ -171,8 +171,13 @@ if (locked) app.whenReady().then(async () => {
   win = new BrowserWindow({ width: 1440, height: 940, minWidth: 900, minHeight: 600, title: 'Modern House OMS — محلي', show: !process.argv.includes('--smoke-test'),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   win.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
-  // The desktop renderer never connects to cloud services or remote scripts/images.
-  win.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] }, (_details, callback) => callback({ cancel: true }));
+  // Allow product images while blocking external scripts and tracking
+  win.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] }, (details, callback) => {
+    if (details.resourceType === 'image' || /\.(png|jpe?g|webp|svg|gif|avif)(\?.*)?$/i.test(details.url)) {
+      return callback({ cancel: false });
+    }
+    callback({ cancel: true });
+  });
   const external = url => {
     try {
       const parsed = new URL(url);
