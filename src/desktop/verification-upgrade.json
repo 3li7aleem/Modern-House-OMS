@@ -1,0 +1,133 @@
+{
+  "passed": true,
+  "checkedAt": "2026-11-04T04:13:05.325Z",
+  "legacyModule": "C:\\Users\\7aleem\\Desktop\\oms-modern-main\\oms-modern-main\\src\\desktop\\database.cjs",
+  "executable": "C:\\Users\\7aleem\\Desktop\\Modern House OMS Development\\src\\desktop\\release\\win-unpacked\\Modern House OMS.exe",
+  "directory": "C:\\Users\\7aleem\\AppData\\Local\\Temp\\oms-legacy-upgrade-3VbQt0",
+  "oldRecordsAndPreferencesPreserved": true,
+  "integrity": "ok",
+  "runs": [
+    {
+      "text": "MODERN HOUSE\nلوحة التحكم\nنقاط البيع\nالطلبات\nعروض الأسعار\nالمخزون\nالمالية\nالعملاء\nالتسويق عبر واتساب\nالموردون\nالتوصيل\nالطلبات الواردة\nالإصلاح والصيانة\nطلبات الشراء\nالتقارير\nإدارة المستخدمين\nالإعدادات\nالإعدادات\n2\nمدير الجهاز\nADMIN\nالإعدادات\nبيانات هذا الجهاز\n\nتُحفظ السجلات والصور المرفوعة والإعدادات محليًا. تُحفظ نسخة عند التشغيل، وكل 15 دقيقة بعد التعديلات، وعند الإغلاق المعتاد، مع الاحتفاظ بآخر 48 نسخة حديثة و14 نسخة يومية. احفظ نسخة خارج الجهاز لنقل بياناتك أو حمايتها من فقدان الجهاز.\n\nحفظ نسخة احتياطية\nاستعادة نسخة احتياطية\nفتح مجلد البيانات\nتخصيص الفاتورة\nتخصيص مذكرة التوصيل\nطباعة رمز الاستجابة السريعة\nتخصيص الموقع\nإدارة البيانات\nمعاينة حية\nمودرن هاوس\n\nفاتورة\n\nالطلب: LEGACY-0001\n\nالتاريخ: ٠١ يناير ٢٠٢٦\n\nالوقت: ٠٣:٠٠ ص\n\nالبائع: مدير الجهاز\n\nإلى العميل\n\nعميل تجريبي قديم\n\nfixture\n\nالصنف\tال",
+      "navigation": [
+        {
+          "label": "المخزون",
+          "rendered": true
+        },
+        {
+          "label": "العملاء",
+          "rendered": true
+        },
+        {
+          "label": "الطلبات",
+          "rendered": true
+        },
+        {
+          "label": "عروض الأسعار",
+          "rendered": true
+        },
+        {
+          "label": "الإصلاح والصيانة",
+          "rendered": true
+        },
+        {
+          "label": "التقارير",
+          "rendered": true
+        },
+        {
+          "label": "الإعدادات",
+          "rendered": true
+        }
+      ],
+      "localControls": true,
+      "excel": true,
+      "transactions": {
+        "create": true,
+        "update": true,
+        "delete": true,
+        "rollback": true,
+        "receiveOnce": true,
+        "savedOrderNumber": "ORD-1793765577263-e471e6cc"
+      },
+      "rootChildren": 3,
+      "persisted": false,
+      "product": {
+        "name": "Offline smoke test",
+        "sku": "SMOKE",
+        "stock": 7,
+        "salePrice": 10,
+        "purchasePrice": 5,
+        "status": "Active",
+        "id": "43687da2-336d-4fa0-94ae-9e39cf2a45e8",
+        "createdAt": "2026-11-04T04:12:57.251Z",
+        "updatedAt": "2026-11-04T04:12:57.460Z"
+      },
+      "background": "rgb(248, 250, 252)",
+      "bridge": true,
+      "nodeExposed": false,
+      "version": "1.1.0",
+      "periodicBackup": true
+    },
+    {
+      "text": "MODERN HOUSE\nلوحة التحكم\nنقاط البيع\nالطلبات\nعروض الأسعار\nالمخزون\nالمالية\nالعملاء\nالتسويق عبر واتساب\nالموردون\nالتوصيل\nالطلبات الواردة\nالإصلاح والصيانة\nطلبات الشراء\nالتقارير\nإدارة المستخدمين\nالإعدادات\nالإعدادات\n4\nمدير الجهاز\nADMIN\nالإعدادات\nبيانات هذا الجهاز\n\nتُحفظ السجلات والصور المرفوعة والإعدادات محليًا. تُحفظ نسخة عند التشغيل، وكل 15 دقيقة بعد التعديلات، وعند الإغلاق المعتاد، مع الاحتفاظ بآخر 48 نسخة حديثة و14 نسخة يومية. احفظ نسخة خارج الجهاز لنقل بياناتك أو حمايتها من فقدان الجهاز.\n\nحفظ نسخة احتياطية\nاستعادة نسخة احتياطية\nفتح مجلد البيانات\nتخصيص الفاتورة\nتخصيص مذكرة التوصيل\nطباعة رمز الاستجابة السريعة\nتخصيص الموقع\nإدارة البيانات\nمعاينة حية\nمودرن هاوس\n\nفاتورة\n\nالطلب: LEGACY-0001\n\nالتاريخ: ٠١ يناير ٢٠٢٦\n\nالوقت: ٠٣:٠٠ ص\n\nالبائع: مدير الجهاز\n\nإلى العميل\n\nعميل تجريبي قديم\n\nfixture\n\nالصنف\tال",
+      "navigation": [
+        {
+          "label": "المخزون",
+          "rendered": true
+        },
+        {
+          "label": "العملاء",
+          "rendered": true
+        },
+        {
+          "label": "الطلبات",
+          "rendered": true
+        },
+        {
+          "label": "عروض الأسعار",
+          "rendered": true
+        },
+        {
+          "label": "الإصلاح والصيانة",
+          "rendered": true
+        },
+        {
+          "label": "التقارير",
+          "rendered": true
+        },
+        {
+          "label": "الإعدادات",
+          "rendered": true
+        }
+      ],
+      "localControls": true,
+      "excel": true,
+      "transactions": {
+        "create": true,
+        "update": true,
+        "delete": true,
+        "rollback": true,
+        "receiveOnce": true,
+        "savedOrderNumber": "ORD-1793765582570-f000bce5"
+      },
+      "rootChildren": 3,
+      "persisted": true,
+      "product": {
+        "name": "Offline smoke test",
+        "sku": "SMOKE",
+        "stock": 7,
+        "salePrice": 10,
+        "purchasePrice": 5,
+        "status": "Active",
+        "id": "43687da2-336d-4fa0-94ae-9e39cf2a45e8",
+        "createdAt": "2026-11-04T04:12:57.251Z",
+        "updatedAt": "2026-11-04T04:13:02.702Z"
+      },
+      "background": "rgb(248, 250, 252)",
+      "bridge": true,
+      "nodeExposed": false,
+      "version": "1.1.0",
+      "periodicBackup": true
+    }
+  ]
+}

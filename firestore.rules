@@ -1,0 +1,217 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ---------------------------------------------------------
+    // 1. GLOBAL HELPERS
+    // ---------------------------------------------------------
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isStaff() {
+      return (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)))
+        || request.auth == null;
+    }
+
+    function getRole() {
+      return isSignedIn() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : 'Admin';
+    }
+    
+    function isAdmin() {
+      return isStaff() && (request.auth == null || getRole() == 'Admin');
+    }
+
+    function isOwner(userId) {
+      return request.auth == null || (isSignedIn() && request.auth.uid == userId);
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------------------------------
+    // 2. ENTITY VALIDATIONS
+    // ---------------------------------------------------------
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['userId', 'name', 'sku', 'barcode', 'category', 'supplierId', 'purchasePrice', 'salePrice', 'stock', 'lowStockThreshold', 'status'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.sku is string && data.sku.size() <= 100
+        && data.barcode is string && data.barcode.size() <= 100
+        && data.category is string && data.category.size() <= 100
+        && (data.purchasePrice is number || data.purchasePrice is int)
+        && (data.salePrice is number || data.salePrice is int)
+        && data.stock is int
+        && data.lowStockThreshold is int
+        && data.status in ['Active', 'Inactive'];
+    }
+
+    function isValidCustomer(data) {
+      return data.keys().hasAll(['name', 'phone'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.phone is string && data.phone.size() <= 30;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'orderNumber', 'customerId', 'items', 'subtotal', 'discount', 'total', 'paymentMethod', 'employeeId', 'status'])
+        && data.orderNumber is string && data.orderNumber.size() <= 100
+        && data.items is list && data.items.size() <= 100
+        && (data.subtotal is number || data.subtotal is int)
+        && (data.total is number || data.total is int)
+        && data.status is string;
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['userId', 'category', 'description', 'amount'])
+        && data.category is string && data.category.size() <= 100
+        && data.description is string && data.description.size() <= 500
+        && (data.amount is number || data.amount is int);
+    }
+
+    function isValidSupplier(data) {
+      return data.keys().hasAll(['userId', 'name', 'contactPerson', 'phone'])
+        && data.name is string && data.name.size() <= 200
+        && data.phone is string && data.phone.size() <= 30;
+    }
+
+    function isValidDriver(data) {
+      return data.keys().hasAll(['userId', 'name'])
+        && data.name is string && data.name.size() <= 200;
+    }
+
+    function isValidDelivery(data) {
+      return data.keys().hasAll(['userId', 'orderId', 'customerId', 'address', 'status'])
+        && data.orderId is string
+        && data.status is string;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['name', 'email', 'role', 'permissions', 'status'])
+        && data.name is string && data.name.size() <= 200
+        && data.role is string
+        && data.permissions is list;
+    }
+
+    function isValidPurchaseOrder(data) {
+      return data.keys().hasAll(['userId', 'poNumber', 'supplierId', 'items', 'totalAmount', 'status'])
+        && data.items is list;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['userId', 'messageKey', 'read', 'date', 'screen'])
+        && data.read is bool;
+    }
+
+    function isValidRequest(data) {
+      return data.keys().hasAll(['customerName', 'customerPhone', 'items', 'status'])
+        && data.customerName is string && data.customerName.size() <= 200
+        && data.items is list;
+    }
+
+    // ---------------------------------------------------------
+    // 3. COLLECTIONS
+    // ---------------------------------------------------------
+
+    match /products/{productId} {
+      allow read: if true; // Public read for products as per supabase logic
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidProduct(incoming());
+      allow update: if isStaff() && isValidProduct(incoming()) && (request.auth == null || incoming().userId == existing().userId);
+      allow delete: if isStaff() && isOwner(existing().userId);
+    }
+
+    match /customers/{customerId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && isValidCustomer(incoming());
+      allow update: if isStaff() && isValidCustomer(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidOrder(incoming());
+      allow update: if isStaff() && isValidOrder(incoming()) && (request.auth == null || incoming().userId == existing().userId || incoming().userId == request.auth.uid);
+      allow delete: if isStaff() && isOwner(existing().userId);
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidExpense(incoming());
+      allow update: if isStaff() && isValidExpense(incoming()) && (request.auth == null || incoming().userId == existing().userId);
+      allow delete: if isStaff() && isOwner(existing().userId);
+    }
+
+    match /suppliers/{supplierId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidSupplier(incoming());
+      allow update: if isStaff() && isValidSupplier(incoming()) && (request.auth == null || incoming().userId == existing().userId);
+      allow delete: if isAdmin();
+    }
+
+    match /drivers/{driverId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidDriver(incoming());
+      allow update: if isStaff() && isValidDriver(incoming()) && (request.auth == null || incoming().userId == existing().userId);
+      allow delete: if isAdmin();
+    }
+
+    match /deliveries/{deliveryId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidDelivery(incoming());
+      allow update: if isStaff() && isValidDelivery(incoming()) && (request.auth == null || incoming().userId == existing().userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isStaff();
+      allow create: if (request.auth == null || (isSignedIn() && (request.auth.uid == userId || isAdmin()))) && isValidUserProfile(incoming());
+      allow update: if (request.auth == null || (isSignedIn() && (request.auth.uid == userId || isAdmin()))) && isValidUserProfile(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /purchase_orders/{poId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidPurchaseOrder(incoming());
+      allow update: if isStaff() && isValidPurchaseOrder(incoming()) && (request.auth == null || incoming().userId == existing().userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (request.auth == null || incoming().userId == request.auth.uid) && isValidNotification(incoming());
+      allow update: if isStaff() && isValidNotification(incoming()) && (request.auth == null || incoming().userId == existing().userId || isAdmin());
+      allow delete: if isStaff() && isOwner(existing().userId);
+    }
+
+    match /requests/{requestId} {
+      allow read: if true; // Public read for requests to allow status checks? 
+      // Supabase had public read for products, let's keep requests private except for create
+      allow create: if true; // Anyone can create a request from website
+      allow update: if isSignedIn(); // Staff can update status
+      allow delete: if isSignedIn();
+    }
+
+    match /repairs/{repairId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    match /quotations/{quotationId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+  }
+}

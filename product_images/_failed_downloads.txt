@@ -1,0 +1,8 @@
+[3] SKU-614104-54
+https://www.khalaifat.com/media/catalog/product/cache/102d328d2f30440660bebe1418a4e2fc/p/k/pkn971fb1m_image__3.jpeg
+Error: HTTP Error 404: NOT FOUND
+
+[108] 1000136850
+https://www.khalaifat.com/media/catalog/product/cache/102d328d2f30440660bebe1418a4e2fc/p/k/pkn971fb1m_image__3.jpeg
+Error: HTTP Error 404: NOT FOUND
+

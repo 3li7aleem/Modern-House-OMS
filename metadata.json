@@ -1,0 +1,10 @@
+{
+  "name": "Modern House for Trading OMS",
+  "description": "An integrated Operations Management System for 'Modern House for Trading' store, featuring modules for sales, price quotations, inventory, accounting, maintenance, delivery, and customer relationship management.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

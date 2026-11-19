@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 400 360' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='200,30 70,250 200,250' fill='%23dfb175' stroke='%23dfb175' stroke-width='1'/%3E%3Cpolygon points='200,30 200,250 330,250' fill='%23bc955d' stroke='%23bc955d' stroke-width='1'/%3E%3Cline x1='200' y1='30' x2='200' y2='250' stroke='%23a47d47' stroke-width='2' opacity='0.2'/%3E%3Cpolygon points='70,251 200,251 330,251 200,254' fill='%233e2d14' opacity='0.3'/%3E%3Cg%3E%3Cpath d='M 132,215 L 132,142 L 158,170 L 184,142 L 184,215 L 172,215 L 172,168 L 158,182 L 144,168 L 144,215 Z' fill='%23ffffff' stroke='%23111111' stroke-width='5' stroke-linejoin='miter'/%3E%3Cpath d='M 196,215 L 196,155 L 210,135 L 224,155 L 224,185 L 238,185 L 238,142 L 250,142 L 250,215 L 238,215 L 238,197 L 224,197 L 224,215 Z' fill='%23ffffff' stroke='%23111111' stroke-width='5' stroke-linejoin='miter'/%3E%3Crect x='203' y='160' width='14' height='14' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/%3E%3Cline x1='210' y1='160' x2='210' y2='174' stroke='%23111111' stroke-width='1.5'/%3E%3Cline x1='203' y1='167' x2='217' y2='167' stroke='%23111111' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/manifest.json" />
+    <script>
+      // Fix for restricted sandboxed iFrame environment where window.fetch is getter-only.
+      // This prevents Uncaught TypeError: Cannot set property fetch of #<Window> which has only a getter
+      (function() {
+        try {
+          var originalFetch = window.fetch;
+          var currentFetch = originalFetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() { return currentFetch; },
+            set: function(val) { currentFetch = val; },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          console.warn("Unable to define window.fetch hook:", e);
+        }
+      })();
+    </script>
+    <title>Modern House for Trading OMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    
+
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'primary': {
+                DEFAULT: '#0f172a', // slate-900
+                'hover': '#1e293b', // slate-800
+                'focus': '#334155', // slate-700
+              },
+              'secondary': '#f4f4f5', // zinc-100
+              'background': '#fafafa', // neutral-50
+              'foreground': '#09090b', // zinc-950
+              'card': '#ffffff',
+              'sidebar': '#ffffff',
+              'sidebar-hover': '#f4f4f5',
+              'card-foreground': '#09090b',
+              'text-primary': '#09090b',
+              'text-secondary': '#71717a', // zinc-500
+              'border': '#e4e4e7', // zinc-200
+              'input': '#f4f4f5',
+              'ring': '#18181b',
+
+              'dark': {
+                'background': '#09090b', // zinc-950
+                'foreground': '#fafafa', // neutral-50
+                'card': '#09090b',
+                'card-foreground': '#fafafa',
+                'text-primary': '#fafafa',
+                'text-secondary': '#a1a1aa', // zinc-400
+                'border': '#27272a', // zinc-800
+                'input': '#27272a',
+                'ring': '#e4e4e7',
+                'sidebar': '#09090b',
+                'sidebar-hover': '#18181b', // zinc-900
+              },
+            },
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            },
+            animation: {
+              'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            },
+            boxShadow: {
+              'soft': '0 4px 24px rgba(0,0,0,0.03)',
+              'soft-hover': '0 8px 32px rgba(0,0,0,0.06)',
+            }
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+
+  </head>
+  <body class="antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

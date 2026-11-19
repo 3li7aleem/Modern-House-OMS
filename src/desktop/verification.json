@@ -1,0 +1,124 @@
+[
+  {
+    "text": "MODERN HOUSE\nلوحة التحكم\nنقاط البيع\nالطلبات\nعروض الأسعار\nالمخزون\nالمالية\nالعملاء\nالتسويق عبر واتساب\nالموردون\nالتوصيل\nالطلبات الواردة\nالإصلاح والصيانة\nطلبات الشراء\nالتقارير\nإدارة المستخدمين\nالإعدادات\nالإعدادات\n2\nمدير الجهاز\nADMIN\nالإعدادات\nبيانات هذا الجهاز\n\nتُحفظ السجلات والصور المرفوعة والإعدادات محليًا. تُحفظ نسخة عند التشغيل، وكل 15 دقيقة بعد التعديلات، وعند الإغلاق المعتاد، مع الاحتفاظ بآخر 48 نسخة حديثة و14 نسخة يومية. احفظ نسخة خارج الجهاز لنقل بياناتك أو حمايتها من فقدان الجهاز.\n\nحفظ نسخة احتياطية\nاستعادة نسخة احتياطية\nفتح مجلد البيانات\nتخصيص الفاتورة\nتخصيص مذكرة التوصيل\nطباعة رمز الاستجابة السريعة\nتخصيص الموقع\nإدارة البيانات\nمعاينة حية\nمودرن هاوس\n\nفاتورة\n\nالطلب: INV-2024-PREVIEW\n\nالتاريخ: ٠٤ نوفمبر ٢٠٢٦\n\nالوقت: ٠٧:١٣ ص\n\nالبائع: غير متوفر\n\nإلى العميل\n\nغير متوفر\n\nالصنف\tالضمان\tالكمية\t",
+    "navigation": [
+      {
+        "label": "المخزون",
+        "rendered": true
+      },
+      {
+        "label": "العملاء",
+        "rendered": true
+      },
+      {
+        "label": "الطلبات",
+        "rendered": true
+      },
+      {
+        "label": "عروض الأسعار",
+        "rendered": true
+      },
+      {
+        "label": "الإصلاح والصيانة",
+        "rendered": true
+      },
+      {
+        "label": "التقارير",
+        "rendered": true
+      },
+      {
+        "label": "الإعدادات",
+        "rendered": true
+      }
+    ],
+    "localControls": true,
+    "excel": true,
+    "transactions": {
+      "create": true,
+      "update": true,
+      "delete": true,
+      "rollback": true,
+      "receiveOnce": true,
+      "savedOrderNumber": "ORD-1793765630258-6d120620"
+    },
+    "rootChildren": 3,
+    "persisted": false,
+    "product": {
+      "name": "Offline smoke test",
+      "sku": "SMOKE",
+      "stock": 7,
+      "salePrice": 10,
+      "purchasePrice": 5,
+      "status": "Active",
+      "id": "336b0e29-648a-4a81-b481-4654367b9eb7",
+      "createdAt": "2026-11-04T04:13:50.245Z",
+      "updatedAt": "2026-11-04T04:13:50.4Z"
+    },
+    "background": "rgb(248, 250, 252)",
+    "bridge": true,
+    "nodeExposed": false,
+    "version": "1.1.0",
+    "periodicBackup": true
+  },
+  {
+    "text": "MODERN HOUSE\nلوحة التحكم\nنقاط البيع\nالطلبات\nعروض الأسعار\nالمخزون\nالمالية\nالعملاء\nالتسويق عبر واتساب\nالموردون\nالتوصيل\nالطلبات الواردة\nالإصلاح والصيانة\nطلبات الشراء\nالتقارير\nإدارة المستخدمين\nالإعدادات\nالإعدادات\n4\nمدير الجهاز\nADMIN\nالإعدادات\nبيانات هذا الجهاز\n\nتُحفظ السجلات والصور المرفوعة والإعدادات محليًا. تُحفظ نسخة عند التشغيل، وكل 15 دقيقة بعد التعديلات، وعند الإغلاق المعتاد، مع الاحتفاظ بآخر 48 نسخة حديثة و14 نسخة يومية. احفظ نسخة خارج الجهاز لنقل بياناتك أو حمايتها من فقدان الجهاز.\n\nحفظ نسخة احتياطية\nاستعادة نسخة احتياطية\nفتح مجلد البيانات\nتخصيص الفاتورة\nتخصيص مذكرة التوصيل\nطباعة رمز الاستجابة السريعة\nتخصيص الموقع\nإدارة البيانات\nمعاينة حية\nمودرن هاوس\n\nفاتورة\n\nالطلب: INV-2024-PREVIEW\n\nالتاريخ: ٠٤ نوفمبر ٢٠٢٦\n\nالوقت: ٠٧:١٤ ص\n\nالبائع: غير متوفر\n\nإلى العميل\n\nغير متوفر\n\nالصنف\tالضمان\tالكمية\t",
+    "navigation": [
+      {
+        "label": "المخزون",
+        "rendered": true
+      },
+      {
+        "label": "العملاء",
+        "rendered": true
+      },
+      {
+        "label": "الطلبات",
+        "rendered": true
+      },
+      {
+        "label": "عروض الأسعار",
+        "rendered": true
+      },
+      {
+        "label": "الإصلاح والصيانة",
+        "rendered": true
+      },
+      {
+        "label": "التقارير",
+        "rendered": true
+      },
+      {
+        "label": "الإعدادات",
+        "rendered": true
+      }
+    ],
+    "localControls": true,
+    "excel": true,
+    "transactions": {
+      "create": true,
+      "update": true,
+      "delete": true,
+      "rollback": true,
+      "receiveOnce": true,
+      "savedOrderNumber": "ORD-1793765639795-e331b0de"
+    },
+    "rootChildren": 3,
+    "persisted": true,
+    "product": {
+      "name": "Offline smoke test",
+      "sku": "SMOKE",
+      "stock": 7,
+      "salePrice": 10,
+      "purchasePrice": 5,
+      "status": "Active",
+      "id": "336b0e29-648a-4a81-b481-4654367b9eb7",
+      "createdAt": "2026-11-04T04:13:50.245Z",
+      "updatedAt": "2026-11-04T04:13:59.962Z"
+    },
+    "background": "rgb(248, 250, 252)",
+    "bridge": true,
+    "nodeExposed": false,
+    "version": "1.1.0",
+    "periodicBackup": true
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "name": "modern-house-desktop",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Modern House OMS - Offline Windows desktop application",
+  "author": "Modern House",
+  "main": "main.cjs",
+  "scripts": {
+    "test": "node --test database.test.cjs backups.test.cjs frontend-workflows.test.cjs",
+    "build": "node build.mjs",
+    "start": "electron .",
+    "dist": "node build.mjs && electron-builder --win nsis portable --x64 --publish never"
+  },
+  "build": {
+    "electronVersion": "44.4.5",
+    "appId": "bh.modernhouse.oms.desktop",
+    "productName": "Modern House OMS",
+    "directories": { "output": "release" },
+    "files": ["main.cjs", "preload.cjs", "database.cjs", "backups.cjs", "renderer/**/*", "package.json"],
+    "asar": true,
+    "npmRebuild": false,
+    "win": { "target": ["nsis", "portable"], "signExecutable": false, "icon": "build/icon.ico" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "deleteAppDataOnUninstall": false, "runAfterFinish": false, "artifactName": "Modern-House-OMS-Setup-${version}.${ext}" },
+    "portable": { "artifactName": "Modern-House-OMS-Portable-${version}.${ext}" }
+  }
+}

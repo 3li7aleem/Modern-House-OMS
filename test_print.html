@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+<button onclick="testPrint()">Print Test</button>
+<script>
+function testPrint() {
+  const html = `<html><body><h1>Hello Print</h1><script>setTimeout(() => window.print(), 500);</script></body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = "_blank";
+  a.click();
+}
+</script>
+</body>
+</html>
