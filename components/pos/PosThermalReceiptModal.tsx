@@ -46,20 +46,16 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
     base = base.replace(/\/+$/, '');
     const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
 
-    const itemsSummary = (order.items || []).map(it => {
-      const p = products.find(prod => prod.id === it.productId);
-      return `• ${p?.name || 'صنف'} (${it.quantity}x) = ${(it.price * it.quantity).toFixed(2)} د.ب`;
-    }).join('\n');
-
-    const qrData = `مودرن هاوس للتجارة
-إيصال مبيعات: ${order.orderNumber}
-التاريخ: ${formatDate(order.date)}
-الأصناف:
-${itemsSummary}
-الإجمالي: ${order.total} د.ب
-الرابط: ${invoiceUrl}`;
-
-    QRCode.toDataURL(qrData, { width: 130, margin: 1, errorCorrectionLevel: 'M' })
+    // Use direct clickable URL so mobile camera scan opens digital receipt immediately
+    QRCode.toDataURL(invoiceUrl, { 
+      width: 140, 
+      margin: 1, 
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff'
+      }
+    })
       .then(url => setQrCodeDataUrl(url))
       .catch(err => console.error('Failed to generate QR code', err));
   }, [order, invSettings?.publicServerUrl, products]);

@@ -28,7 +28,13 @@ import {
   Copy,
   FileText,
   Store,
-  Layers
+  Layers,
+  Volume2,
+  VolumeX,
+  Play,
+  Square,
+  MessageSquareQuote,
+  Shield
 } from 'lucide-react';
 
 type PrintListItem = {
@@ -40,13 +46,36 @@ const SettingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { 
       settings, updateLogoUrl, updateHeroImageUrl, updateFooterText, updateAccentColor, updateInvoiceSettings,
-      updateDeliveryNoteNotice, updateDeliveryNoteContact, updateDeliveryNoteThankYou
+      updateDeliveryNoteNotice, updateDeliveryNoteContact, updateDeliveryNoteThankYou,
+      voiceGreetingEnabled, updateVoiceGreetingEnabled,
+      entranceSupplicationEnabled, updateEntranceSupplicationEnabled
   } = useSettings();
   const { orders, deliveries, drivers, products, customers, expenses, suppliers, users, purchaseOrders, notifications, requests } = useAppContext();
   const { language } = useTranslation();
   const isAr = language === 'ar';
-  const [activeTab, setActiveTab] = useState<'invoice' | 'delivery' | 'barcode_printing' | 'data_management' | 'app_download'>('app_download');
+  const [activeTab, setActiveTab] = useState<'invoice' | 'delivery' | 'barcode_printing' | 'data_management' | 'app_download' | 'voice_audio'>('voice_audio');
   const [isDeletingData, setIsDeletingData] = useState(false);
+  const [isPlayingVoiceTest, setIsPlayingVoiceTest] = useState(false);
+
+  const handlePlayVoiceTest = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const testMsg = new SpeechSynthesisUtterance('أهلاً بك يا المدير العام، تم تسجيل الدخول بنجاح. بارك الله في تجارتكم ومبيعاتكم في مودرن هاوس.');
+      testMsg.lang = 'ar-SA';
+      testMsg.rate = 0.95;
+      testMsg.onstart = () => setIsPlayingVoiceTest(true);
+      testMsg.onend = () => setIsPlayingVoiceTest(false);
+      testMsg.onerror = () => setIsPlayingVoiceTest(false);
+      window.speechSynthesis.speak(testMsg);
+    }
+  };
+
+  const handleStopVoiceTest = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsPlayingVoiceTest(false);
+    }
+  };
 
   // Download & Update States
   const [apkQrUrl, setApkQrUrl] = useState('');
@@ -247,6 +276,13 @@ const SettingsScreen: React.FC = () => {
               >
                 <Download className="w-4 h-4 text-amber-500" />
                 <span>{isAr ? 'تحميل التطبيقات والتحديثات (APK / EXE)' : 'App Downloads & Updates'}</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('voice_audio')} 
+                className={`${activeTab === 'voice_audio' ? 'border-primary text-primary font-bold' : 'border-transparent text-text-secondary hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1.5`}
+              >
+                <Volume2 className="w-4 h-4 text-emerald-500" />
+                <span>{isAr ? 'الصوتيات والترحيب بالمدير' : 'Voice & Audio'}</span>
               </button>
               <button onClick={() => setActiveTab('data_management')} className={`${activeTab === 'data_management' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                   {t('settings.data_management')}
@@ -873,6 +909,182 @@ const SettingsScreen: React.FC = () => {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 5. Voice & Audio Greeting Customization Screen */}
+      {activeTab === 'voice_audio' && (
+        <div className="mt-8 space-y-8 animate-fade-in">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-3xl p-6 md:p-8 border border-emerald-500/30 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-2xl">
+                <Volume2 className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-xl font-black text-white">
+                  {isAr ? 'إدارة الصوتيات والترحيب الذكي بالمدير العام' : 'Voice Greeting & Smart Audio System'}
+                </h4>
+                <p className="text-xs text-slate-300 mt-1">
+                  {isAr 
+                    ? 'التحكم الكامل في رسائل الترحيب الصوتي للمدير، دعاء دخول المعرض والمنظومة، وإمكانية تفعيلها أو إيقافها فوراً'
+                    : 'Configure voice greetings for manager login, entrance supplications, and in-app sound toggles'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`px-4 py-1.5 rounded-full text-xs font-bold border flex items-center gap-2 ${
+                voiceGreetingEnabled 
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                  : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+              }`}>
+                <span className={`w-2.5 h-2.5 rounded-full ${voiceGreetingEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+                <span>{voiceGreetingEnabled ? (isAr ? 'الصوت مفعّل' : 'Voice Active') : (isAr ? 'الصوت متوقف' : 'Voice Muted')}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Card 1: Voice Greeting at Login */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <Volume2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        {isAr ? 'الترحيب الصوتي عند تسجيل الدخول' : 'Voice Greeting on Login'}
+                      </h4>
+                      <span className="text-xs text-slate-400 font-mono">SpeechSynthesis (ar-SA)</span>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-xl ${
+                    voiceGreetingEnabled 
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' 
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  }`}>
+                    {voiceGreetingEnabled ? (isAr ? 'مفعل الآن' : 'Enabled') : (isAr ? 'معطل' : 'Disabled')}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                  {isAr 
+                    ? 'عند تسجيل الدخول أو فتح التطبيق، يقوم النظام بنطق عبارة ترحيبية خاصة بالمدير العام: "أهلاً بك يا المدير العام، تم تسجيل الدخول بنجاح. بارك الله في تجارتكم". يمكنك تفعيلها أو كتمها بنقرة واحدة.' 
+                    : 'System plays an automatic audio greeting addressing the manager upon logging into the OMS platform.'}
+                </p>
+
+                {/* Quote Box */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 mb-6 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <MessageSquareQuote className="w-4 h-4 text-emerald-500" />
+                    <span>{isAr ? 'نص الترحيب المسجل:' : 'Audio Speech Script:'}</span>
+                  </div>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium italic">
+                    «أهلاً بك يا المدير العام، تم تسجيل الدخول بنجاح. بارك الله في تجارتكم ومبيعاتكم في مودرن هاوس»
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => updateVoiceGreetingEnabled(!voiceGreetingEnabled)}
+                  className={`w-full sm:flex-1 py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-95 cursor-pointer ${
+                    voiceGreetingEnabled 
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20' 
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+                  }`}
+                >
+                  {voiceGreetingEnabled ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  <span>{voiceGreetingEnabled ? (isAr ? 'إيقاف الترحيب الصوتي' : 'Disable Voice Greeting') : (isAr ? 'تفعيل الترحيب الصوتي' : 'Enable Voice Greeting')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={isPlayingVoiceTest ? handleStopVoiceTest : handlePlayVoiceTest}
+                  className="w-full sm:w-auto py-3 px-5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-2 transition shrink-0 cursor-pointer"
+                >
+                  {isPlayingVoiceTest ? (
+                    <>
+                      <Square className="w-4 h-4 text-rose-500 fill-current" />
+                      <span className="text-rose-500">{isAr ? 'إيقاف الصوت' : 'Stop'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 text-emerald-500 fill-current" />
+                      <span>{isAr ? 'تجربة الصوت الآن' : 'Test Voice'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Entrance Supplication Banner */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        {isAr ? 'شريط دعاء الدخول أعلى الشاشة' : 'Entrance Supplication Banner'}
+                      </h4>
+                      <span className="text-xs text-slate-400 font-mono">Top Floating Banner</span>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-xl ${
+                    entranceSupplicationEnabled 
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' 
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  }`}>
+                    {entranceSupplicationEnabled ? (isAr ? 'مفعل الآن' : 'Enabled') : (isAr ? 'معطل' : 'Disabled')}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                  {isAr 
+                    ? 'يظهر شريط دعاء الدخول المبارك بشكل فخم أعلى الشاشة مع فتح المنظومة، ومزود بزر إغلاق وإلغاء بارز عالي الوضوح يمكن من خلاله إلغاء التنبيه وإيقاف الصوت بلمسة واحدة.' 
+                    : 'Displays the blessed entrance supplication banner at top with a prominent, easy-to-dismiss cancel button.'}
+                </p>
+
+                {/* Banner Preview Box */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-950 to-slate-900 border border-amber-500/40 text-white mb-6 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-bold text-amber-400">{isAr ? 'معاينة شريط الدعاء:' : 'Banner Preview:'}</span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-black text-[10px]">
+                      {isAr ? 'زر إغلاق بارز ✕' : 'Clear Close ✕'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-200">
+                    «بِسْمِ اللَّهِ وَلَجْنَا، وَبِسْمِ اللَّهِ خَرَجْنَا، وَعَلَى اللَّهِ رَبِّنَا تَوَكَّلْنَا»
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => updateEntranceSupplicationEnabled(!entranceSupplicationEnabled)}
+                  className={`w-full py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-95 cursor-pointer ${
+                    entranceSupplicationEnabled 
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20' 
+                      : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{entranceSupplicationEnabled ? (isAr ? 'إيقاف شريط الدعاء' : 'Disable Banner') : (isAr ? 'تفعيل شريط الدعاء' : 'Enable Banner')}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -74,6 +74,10 @@ interface SettingsContextType {
     updateDeliveryNoteThankYou: (text: string) => void;
     heroImageUrl: string;
     updateHeroImageUrl: (url: string) => void;
+    voiceGreetingEnabled: boolean;
+    updateVoiceGreetingEnabled: (enabled: boolean) => void;
+    entranceSupplicationEnabled: boolean;
+    updateEntranceSupplicationEnabled: (enabled: boolean) => void;
     settings: SettingsContextType; // For easy passing
 }
 
@@ -88,7 +92,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [deliveryNoteContact, setDeliveryNoteContact] = useState(DEFAULT_DELIVERY_CONTACT);
     const [deliveryNoteThankYou, setDeliveryNoteThankYou] = useState(DEFAULT_DELIVERY_THANK_YOU);
     const [heroImageUrl, setHeroImageUrl] = useState(DEFAULT_HERO_IMAGE_URL);
-
+    const [voiceGreetingEnabled, setVoiceGreetingEnabled] = useState(true);
+    const [entranceSupplicationEnabled, setEntranceSupplicationEnabled] = useState(true);
 
     useEffect(() => {
         const savedLogo = localStorage.getItem('settings:logoUrl');
@@ -99,6 +104,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const savedContact = localStorage.getItem('settings:deliveryContact');
         const savedThankYou = localStorage.getItem('settings:deliveryThankYou');
         const savedHeroImage = localStorage.getItem('settings:heroImageUrl');
+        const savedVoiceGreeting = localStorage.getItem('settings:voiceGreetingEnabled');
+        const savedSupplication = localStorage.getItem('settings:entranceSupplicationEnabled');
 
         if (savedLogo) setLogoUrl(savedLogo);
         if (savedFooter) setFooterText(savedFooter);
@@ -119,6 +126,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } else {
             setHeroImageUrl(DEFAULT_HERO_IMAGE_URL);
             localStorage.setItem('settings:heroImageUrl', DEFAULT_HERO_IMAGE_URL);
+        }
+        if (savedVoiceGreeting !== null) {
+            setVoiceGreetingEnabled(savedVoiceGreeting === 'true');
+        }
+        if (savedSupplication !== null) {
+            setEntranceSupplicationEnabled(savedSupplication === 'true');
         }
     }, []);
 
@@ -163,6 +176,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('settings:heroImageUrl', url);
     };
 
+    const updateVoiceGreetingEnabled = (enabled: boolean) => {
+        setVoiceGreetingEnabled(enabled);
+        localStorage.setItem('settings:voiceGreetingEnabled', String(enabled));
+    };
+
+    const updateEntranceSupplicationEnabled = (enabled: boolean) => {
+        setEntranceSupplicationEnabled(enabled);
+        localStorage.setItem('settings:entranceSupplicationEnabled', String(enabled));
+    };
+
     const value = useMemo(() => {
         const self: SettingsContextType = {
             logoUrl,
@@ -181,10 +204,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             updateDeliveryNoteThankYou,
             heroImageUrl,
             updateHeroImageUrl,
+            voiceGreetingEnabled,
+            updateVoiceGreetingEnabled,
+            entranceSupplicationEnabled,
+            updateEntranceSupplicationEnabled,
             get settings() { return self; }
         };
         return self;
-    }, [logoUrl, footerText, accentColor, invoiceSettings, deliveryNoteNotice, deliveryNoteContact, deliveryNoteThankYou, heroImageUrl]);
+    }, [
+        logoUrl,
+        footerText,
+        accentColor,
+        invoiceSettings,
+        deliveryNoteNotice,
+        deliveryNoteContact,
+        deliveryNoteThankYou,
+        heroImageUrl,
+        voiceGreetingEnabled,
+        entranceSupplicationEnabled
+    ]);
 
     return (
         <SettingsContext.Provider value={value}>

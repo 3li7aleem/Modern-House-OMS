@@ -21,6 +21,12 @@
   },
   "rewrites": [
     {
+      "source": "/download/(.*)",
+      "destination": {
+        "service": "desktop"
+      }
+    },
+    {
       "source": "/api/(.*)",
       "destination": {
         "service": "desktop"

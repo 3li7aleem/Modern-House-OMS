@@ -52,21 +52,16 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
     base = base.replace(/\/+$/, '');
     const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
 
-    const itemsSummary = (order.items || []).map(it => {
-      const p = products.find(prod => prod.id === it.productId);
-      return `• ${p?.name || 'صنف'} (${it.quantity}x) = ${(it.price * it.quantity).toFixed(2)} د.ب`;
-    }).join('\n');
-
-    const qrData = `مودرن هاوس للتجارة
-فاتورة: ${order.orderNumber}
-التاريخ: ${formatDate(order.date)}
-العميل: ${customer?.name || 'عميل نقدي'}
-الأصناف:
-${itemsSummary}
-الإجمالي: ${order.total} د.ب
-الرابط: ${invoiceUrl}`;
-
-    QRCode.toDataURL(qrData, { width: 130, margin: 1, errorCorrectionLevel: 'M' })
+    // Use direct clickable URL for the QR code so smartphone cameras immediately open the invoice web page
+    QRCode.toDataURL(invoiceUrl, { 
+      width: 140, 
+      margin: 1, 
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff'
+      }
+    })
       .then(setQrCodeUrl)
       .catch(() => {});
   }, [order, publicServerUrl, products, customer]);
