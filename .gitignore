@@ -9,6 +9,8 @@ dist-ssr/
 release/
 src/desktop/release/
 src/desktop/dist/
+src/desktop/dist-bin/
+src/desktop/dist-release/
 *.asar
 *.exe
 *.apk
