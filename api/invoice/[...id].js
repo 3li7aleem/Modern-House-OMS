@@ -1,6 +1,13 @@
 export default async function handler(req, res) {
   const targetBase = process.env.DESKTOP_API_URL || 'https://washer-lines-shop-shark.trycloudflare.com';
-  const id = Array.isArray(req.query.id) ? req.query.id.join('/') : (req.query.id || '');
+  
+  let id = Array.isArray(req.query.id) ? req.query.id.join('/') : (req.query.id || '');
+  if (!id) {
+    const match = (req.url || '').match(/invoice\/([^?#]+)/);
+    if (match) id = decodeURIComponent(match[1]);
+  }
+  id = id.replace(/\/+$/, '');
+
   const cleanBase = targetBase.replace(/\/+$/, '');
   const targetUrl = `${cleanBase}/invoice/${encodeURIComponent(id)}`;
 

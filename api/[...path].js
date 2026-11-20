@@ -2,7 +2,11 @@ export default async function handler(req, res) {
   const targetBase = process.env.DESKTOP_API_URL || 'https://washer-lines-shop-shark.trycloudflare.com';
 
   try {
-    const url = new URL(req.url, targetBase);
+    const rawUrl = req.url || '/';
+    const path = rawUrl.startsWith('/api') ? rawUrl : `/api${rawUrl}`;
+    const cleanBase = targetBase.replace(/\/+$/, '');
+    const url = `${cleanBase}${path}`;
+
     const headers = { ...req.headers };
     delete headers.host;
 
@@ -15,7 +19,7 @@ export default async function handler(req, res) {
       options.body = typeof req.body === 'object' ? JSON.stringify(req.body) : req.body;
     }
 
-    const response = await fetch(url.toString(), options);
+    const response = await fetch(url, options);
     const data = await response.arrayBuffer();
 
     response.headers.forEach((value, key) => {
