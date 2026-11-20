@@ -26,7 +26,7 @@ import SetupWizardModal from './components/setup/SetupWizardModal';
 import { useAppContext } from './contexts/AppContext';
 import { useTranslation } from './contexts/LanguageContext';
 import { useSettings } from './contexts/SettingsContext';
-import { Bell, X, Sparkles } from 'lucide-react';
+import { Bell, X, Sparkles, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const LoadingSpinner: React.FC = () => (
@@ -55,7 +55,7 @@ const App: React.FC = () => {
     requests
   } = useAppContext();
 
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { voiceGreetingEnabled, entranceSupplicationEnabled } = useSettings();
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
@@ -63,6 +63,31 @@ const App: React.FC = () => {
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(new Set());
   const [isFirstRequestsLoad, setIsFirstRequestsLoad] = useState(true);
   const [showSupplication, setShowSupplication] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<{
+    version: string;
+    downloadUrl: string;
+    releaseNotes?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Check for latest version
+    const currentAppVersion = '1.1.0';
+    const checkUrl = typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+      ? '/version.json'
+      : 'https://modern-house-oms.vercel.app/version.json';
+
+    fetch(checkUrl, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.version && data.version !== currentAppVersion) {
+          const dismissed = localStorage.getItem(`dismissed_update_${data.version}`);
+          if (!dismissed) {
+            setAvailableUpdate(data);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -289,6 +314,45 @@ const App: React.FC = () => {
           }}
         >
           <Header />
+          {availableUpdate && (
+            <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 px-4 py-2.5 flex items-center justify-between gap-3 text-xs font-bold shadow-md relative z-40 border-b border-amber-400 animate-slide-in-top">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="p-1 bg-slate-950 text-amber-400 rounded-lg shrink-0">🚀</span>
+                <span className="truncate">
+                  {language === 'ar'
+                    ? `تنبيه: يتوفر إصدار جديد من برنامج مودرن هاوس (v${availableUpdate.version})! يرجى تحميله وتثبيته للاستفادة من أحدث التحسينات.`
+                    : `Notice: A new version of Modern House OMS (v${availableUpdate.version}) is available! Please download and install the update.`}
+                </span>
+                {availableUpdate.releaseNotes && (
+                  <span className="hidden lg:inline text-[11px] opacity-90 font-normal">
+                    — {availableUpdate.releaseNotes}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={availableUpdate.downloadUrl || 'https://github.com/3li7aleem/Modern-House-OMS/releases'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-slate-950 hover:bg-slate-900 text-amber-300 rounded-xl text-xs font-black shadow transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{language === 'ar' ? 'تحميل التحديث' : 'Download Update'}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem(`dismissed_update_${availableUpdate.version}`, 'true');
+                    setAvailableUpdate(null);
+                  }}
+                  className="p-1 hover:bg-black/10 rounded-lg text-slate-950 transition cursor-pointer"
+                  title={language === 'ar' ? 'تخطي التنبيه' : 'Dismiss'}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
           <main className="flex-1 overflow-x-hidden overflow-y-auto no-scrollbar scroll-smooth relative bg-slate-50/40 dark:bg-slate-950/40">
             {/* Subtle textured background pattern & soft ambient gradient overlay for visual depth */}
             <div className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-25 bg-[radial-gradient(#94a3b8_1.2px,transparent_1.2px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]" />
