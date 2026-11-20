@@ -106,7 +106,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
 
   const whatsAppUrl = `https://wa.me/${cleanPhoneForWhatsApp(customer.phone)}?text=${encodeURIComponent(
     language === 'ar' 
-      ? `مرحباً ${customer.name}، معك البيت الحديث للتجارة (سوق واقف). نسعد بالتواصل معك!` 
+      ? `مرحباً ${customer.name}، معك مودرن هاوس للتجارة (سوق واقف). نسعد بالتواصل معك!` 
       : `Hello ${customer.name}, Modern House for Trading. How can we help you today?`
   )}`;
 

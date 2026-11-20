@@ -26,11 +26,11 @@ let win, db, backups, installation;
 let backupErrorNotified = false;
 let pendingBackupError = null;
 let quitting = false;
-let activeUser = 'local-admin';
+let activeUser = null;
 let tabletServer = null;
-let tabletPort = 3000;
+let tabletPort = 3050;
 let tunnelProcess = null;
-let activeTunnelUrl = 'https://trials-jacob-ask-bridal.trycloudflare.com';
+let activeTunnelUrl = 'https://washer-lines-shop-shark.trycloudflare.com';
 
 function startCloudTunnel(port) {
   const possiblePaths = [
@@ -61,6 +61,17 @@ function startCloudTunnel(port) {
             existing = existing.replace(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/g, activeTunnelUrl);
             fs.writeFileSync(desktopTxt, existing);
           }
+          if (db) {
+            db.setPreference('settings:tunnelUrl', activeTunnelUrl);
+            const invStr = db.getPreference('settings:invoice');
+            if (invStr) {
+              try {
+                const inv = JSON.parse(invStr);
+                inv.publicServerUrl = activeTunnelUrl;
+                db.setPreference('settings:invoice', JSON.stringify(inv));
+              } catch {}
+            }
+          }
         } catch {}
       }
     };
@@ -74,7 +85,12 @@ function startCloudTunnel(port) {
 const entry = path.join(__dirname, 'renderer', 'index.html');
 const entryURL = pathToFileURL(entry).href;
 const trusted = event => {
-  if (!win || event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame || event.senderFrame.url.split('#')[0] !== entryURL) throw new Error('Untrusted sender');
+  if (!win || event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame) throw new Error('Untrusted sender');
+  const frameUrl = decodeURIComponent(event.senderFrame.url.split('#')[0]).toLowerCase();
+  const allowed = decodeURIComponent(entryURL).toLowerCase();
+  if (frameUrl !== allowed && !frameUrl.endsWith('/renderer/index.html') && !frameUrl.endsWith('\\renderer\\index.html')) {
+    throw new Error('Untrusted sender');
+  }
 };
 function writeBackup(filename) {
   return backups.write(filename);
@@ -123,7 +139,7 @@ async function showTabletLink() {
   }
   const primaryIp = ips.find(ip => ip.startsWith('192.168.')) || ips[0] || 'localhost';
   const localUrl = `http://${primaryIp}:${tabletPort}`;
-  const cloudUrl = activeTunnelUrl || 'https://trials-jacob-ask-bridal.trycloudflare.com';
+  const cloudUrl = activeTunnelUrl || 'https://washer-lines-shop-shark.trycloudflare.com';
   await dialog.showMessageBox(win, {
     type: 'info',
     title: 'ربط تابلت وتطبيق أندرويد — Modern House OMS',
@@ -137,7 +153,7 @@ if (locked) app.whenReady().then(async () => {
   fs.mkdirSync(app.getPath('userData'), { recursive: true });
   installation = createInstallation({ controlDirectory: app.getPath('userData') });
   db = installation.database;
-  activeUser = installation.status().setupRequired ? null : 'local-admin';
+  activeUser = null;
   backups = createBackupManager({ directory: path.join(installation.dataDirectory, 'backups'), exportBackup: () => db.exportBackup(), onError: reportBackupError, intervalMs: smokeTest ? 200 : 15 * 60 * 1000 });
   backups.start();
   if (!smokeTest && typeof createTabletServer === 'function') {
@@ -151,14 +167,14 @@ if (locked) app.whenReady().then(async () => {
           }
           backups.markDirty();
         },
-        port: 3000
+        port: 3050
       });
-      tabletServer.listen(3000).then(({ port }) => {
+      tabletServer.listen(3050).then(({ port }) => {
         tabletPort = port;
         console.log(`Tablet PWA server running at http://0.0.0.0:${port}`);
         startCloudTunnel(port);
       }).catch(() => {
-        tabletServer.listen(8080).then(({ port }) => {
+        tabletServer.listen(3051).then(({ port }) => {
           tabletPort = port;
           console.log(`Tablet PWA server running at http://0.0.0.0:${port}`);
           startCloudTunnel(port);
@@ -226,6 +242,7 @@ if (locked) app.whenReady().then(async () => {
         changed = ['purchase_orders', 'products'];
         break;
       case 'session': return activeUser ? db.get('users', activeUser) : null;
+      case 'getCloudUrl': return activeTunnelUrl;
       case 'login': result = db.login(...args); activeUser = result.id; return result;
       case 'loginPin': result = db.loginPin(...args); activeUser = result.id; return result;
       case 'logout': activeUser = null; return null;

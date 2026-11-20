@@ -94,8 +94,8 @@ export const authService = {
     let live = true;
     const revision = authRevision;
     listeners.add(callback);
-    const sessionUid = typeof localStorage !== 'undefined' ? localStorage.getItem('oms_local_session_uid') : null;
-    api().call('session', sessionUid).then(user => {
+    // Require login on app launch for maximum security
+    api().call('session', null).then(user => {
       if (live && revision === authRevision) { auth.currentUser = asAuthUser(user); callback(auth.currentUser); }
     }).catch(report);
     return () => { live = false; listeners.delete(callback); };

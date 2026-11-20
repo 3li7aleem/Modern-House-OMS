@@ -197,7 +197,7 @@ const DeliveriesScreen: React.FC = () => {
     let msg = '';
     if (delivery.status === 'Delivered') {
       msg = language === 'ar'
-        ? `مرحباً ${customer.name}، نود إبلاغك بأنه تم تسليم طلبك رقم ${orderNumber} بنجاح. شكراً لتسوقكم من متجر البيت الحديث للتجارة!`
+        ? `مرحباً ${customer.name}، نود إبلاغك بأنه تم تسليم طلبك رقم ${orderNumber} بنجاح. شكراً لتسوقكم من متجر مودرن هاوس للتجارة!`
         : `Hello ${customer.name}, your order #${orderNumber} has been delivered successfully. Thank you for choosing Modern House for Trading!`;
     } else if (delivery.status === 'Out for Delivery') {
       msg = language === 'ar'

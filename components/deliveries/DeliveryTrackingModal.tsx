@@ -132,7 +132,7 @@ const DeliveryTrackingModal: React.FC<DeliveryTrackingModalProps> = ({
     let text = '';
     if (currentStatus === 'Delivered') {
       text = language === 'ar'
-        ? `مرحباً ${customer.name}، يسعدنا إبلاغك بأنه تم تسليم طلبك رقم ${orderNo} بنجاح من متجر البيت الحديث للتجارة. شكراً لاختياركم لنا!`
+        ? `مرحباً ${customer.name}، يسعدنا إبلاغك بأنه تم تسليم طلبك رقم ${orderNo} بنجاح من متجر مودرن هاوس للتجارة. شكراً لاختياركم لنا!`
         : `Hello ${customer.name}, your order #${orderNo} has been delivered successfully. Thank you for shopping with Modern House for Trading!`;
     } else if (currentStatus === 'Out for Delivery') {
       text = language === 'ar'

@@ -24,7 +24,7 @@ import { QuotationsScreen } from './screens/QuotationsScreen';
 import SetupWizardModal from './components/setup/SetupWizardModal';
 import { useAppContext } from './contexts/AppContext';
 import { useTranslation } from './contexts/LanguageContext';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const LoadingSpinner: React.FC = () => (
@@ -59,6 +59,26 @@ const App: React.FC = () => {
   const [toasts, setToasts] = useState<AppToast[]>([]);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(new Set());
   const [isFirstRequestsLoad, setIsFirstRequestsLoad] = useState(true);
+  const [showSupplication, setShowSupplication] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      setShowSupplication(true);
+      try {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const greeting = new SpeechSynthesisUtterance(`أهلاً بك يا ${currentUser.name || 'المدير العام'}، تم تسجيل الدخول بنجاح. بارك الله في تجارتكم.`);
+          greeting.lang = 'ar-SA';
+          greeting.rate = 0.95;
+          window.speechSynthesis.speak(greeting);
+        }
+      } catch {}
+      const timer = setTimeout(() => setShowSupplication(false), 7000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowSupplication(false);
+    }
+  }, [currentUser?.id]);
 
   useEffect(() => {
     // Session check bypassed to deactivate login
@@ -206,6 +226,24 @@ const App: React.FC = () => {
 
   return (
     <>
+      {showSupplication && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 text-white px-6 py-3 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 backdrop-blur-md">
+          <Sparkles className="w-5 h-5 text-amber-200 shrink-0" />
+          <div className="text-center">
+            <div className="text-[11px] font-bold text-amber-100">دعاء الدخول</div>
+            <div className="text-sm md:text-base font-black tracking-wide font-sans">
+              «بِسْمِ اللَّهِ وَلَجْنَا، وَبِسْمِ اللَّهِ خَرَجْنَا، وَعَلَى اللَّهِ رَبِّنَا تَوَكَّلْنَا»
+            </div>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setShowSupplication(false)}
+            className="text-amber-200 hover:text-white mr-1 text-sm font-bold cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex h-[100dvh] min-h-[100dvh] text-foreground font-sans relative overflow-hidden">
         <MobileSidebar isMobileMenuOpen={isMobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
         <Sidebar />

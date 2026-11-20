@@ -253,7 +253,7 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    {isAr ? 'مؤسسة البيت الحديث للتجارة' : 'Modern House for Trading'}
+                    {isAr ? 'مودرن هاوس للتجارة' : 'Modern House for Trading'}
                   </h1>
                   <p className="text-xs text-slate-500 font-medium">
                     {isAr ? 'المطابخ العصرية • الأجهزة المدمجة • سوق واقف' : 'Modern Kitchens • Built-in Appliances • Souq Waqif'}

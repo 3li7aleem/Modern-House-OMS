@@ -23,15 +23,15 @@ const AuthScreen: React.FC = () => {
           <Logo className="h-14 w-auto" showText={false} />
         </div>
         <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
-          <span>{isAr ? 'مؤسسة البيت الحديث للتجارة' : 'Modern House for Trading'}</span>
+          <span>{isAr ? 'مودرن هاوس للتجارة' : 'Modern House for Trading'}</span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
             OMS
           </span>
         </h1>
         <p className="text-xs md:text-sm text-slate-400 font-medium mt-1">
           {isAr 
-            ? 'نظام إدارة العمليات المتكامل • نقاط البيع والمخزون' 
-            : 'Operations Management System • POS & Inventory'}
+            ? 'إدارة مبيعات مودرن هاوس • أجهزة Built-in • إكسسوارات وأحواض المطابخ استانلس ستيل' 
+            : 'Modern House Sales Management • Built-in Appliances • Kitchen Accessories & Stainless Sinks'}
         </p>
       </div>
 

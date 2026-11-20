@@ -21,10 +21,10 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
   const { invoiceSettings, logoUrl, footerText, accentColor = '#4f46e5' } = settings;
 
   const {
-    companyNameAr = 'مؤسسة مودرن هاوس للتجارة',
+    companyNameAr = 'مودرن هاوس للتجارة',
     companyNameEn = 'Modern House for Trading',
     crNumber = '147987-2',
-    vatNumber = '220000000000002',
+    vatNumber = '',
     phone = '35965477 - 77905477',
     address = 'سوق واقف - مدينة حمد - مملكة البحرين',
     showWarranty = true,
@@ -42,20 +42,34 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
 
   useEffect(() => {
     let base = publicServerUrl?.trim();
-    if (!base || base.includes('unless-tiffany-jill-converted') || base.includes('trials-jacob-ask-bridal') || base.includes('definitely-preceding-raise-clock')) {
+    if (!base || base.includes('trycloudflare.com')) {
       if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.startsWith('file:')) {
         base = window.location.origin;
       } else {
-        base = 'https://exchanges-exclusively-cube-cayman.trycloudflare.com';
+        base = 'https://modern-house-oms.vercel.app';
       }
     }
     base = base.replace(/\/+$/, '');
     const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
 
-    QRCode.toDataURL(invoiceUrl, { width: 110, margin: 1, errorCorrectionLevel: 'M' })
+    const itemsSummary = (order.items || []).map(it => {
+      const p = products.find(prod => prod.id === it.productId);
+      return `• ${p?.name || 'صنف'} (${it.quantity}x) = ${(it.price * it.quantity).toFixed(2)} د.ب`;
+    }).join('\n');
+
+    const qrData = `مودرن هاوس للتجارة
+فاتورة: ${order.orderNumber}
+التاريخ: ${formatDate(order.date)}
+العميل: ${customer?.name || 'عميل نقدي'}
+الأصناف:
+${itemsSummary}
+الإجمالي: ${order.total} د.ب
+الرابط: ${invoiceUrl}`;
+
+    QRCode.toDataURL(qrData, { width: 130, margin: 1, errorCorrectionLevel: 'M' })
       .then(setQrCodeUrl)
       .catch(() => {});
-  }, [order, publicServerUrl]);
+  }, [order, publicServerUrl, products, customer]);
 
   return (
     <div className="p-8 text-slate-900 bg-white font-sans max-w-[800px] mx-auto select-none print:p-4 print:max-w-none" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
@@ -66,14 +80,11 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
             <img src={logoUrl} alt="Company Logo" className="h-16 w-auto object-contain mb-2" />
           ) : (
             <h1 className="text-2xl font-black tracking-tight" style={{ color: accentColor }}>
-              {isAr ? companyNameAr : companyNameEn}
+              {isAr ? (companyNameAr || 'مودرن هاوس للتجارة') : companyNameEn}
             </h1>
           )}
           <p className="text-xs text-slate-500 font-medium">
             {address} • {isAr ? 'هاتف: ' : 'Tel: '}{phone} • {isAr ? 'س.ت: ' : 'CR: '}{crNumber}
-          </p>
-          <p className="text-xs text-slate-500 font-medium">
-            {isAr ? 'الرقم الضريبي VAT: ' : 'VAT Reg. No: '}{vatNumber}
           </p>
         </div>
 
@@ -82,7 +93,7 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
             className="inline-block px-4 py-1.5 rounded-md text-white font-black text-sm uppercase tracking-wider mb-2 shadow-xs"
             style={{ backgroundColor: accentColor }}
           >
-            {isAr ? 'فاتورة ضريبية رسمية' : 'TAX INVOICE'}
+            {isAr ? 'فاتورة مبيعات' : 'SALES INVOICE'}
           </div>
           <div className="text-xs space-y-0.5 text-slate-600">
             <p><span className="font-bold text-slate-700">{isAr ? 'رقم الفاتورة: ' : 'Invoice No: '}</span><span className="font-mono font-bold text-slate-900">{order.orderNumber}</span></p>

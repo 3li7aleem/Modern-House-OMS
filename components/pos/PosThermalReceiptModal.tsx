@@ -34,22 +34,35 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
-    // Generate QR code linking directly to verified digital invoice view
+    // Generate QR code with full items summary + digital invoice view link
     let base = invSettings?.publicServerUrl?.trim();
-    if (!base) {
+    if (!base || base.includes('trycloudflare.com')) {
       if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.startsWith('file:')) {
         base = window.location.origin;
       } else {
-        base = 'https://unless-tiffany-jill-converted.trycloudflare.com';
+        base = 'https://modern-house-oms.vercel.app';
       }
     }
     base = base.replace(/\/+$/, '');
-    const invoiceUrl = `${base}/invoice/${order.id || order.orderNumber}`;
+    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
 
-    QRCode.toDataURL(invoiceUrl, { width: 128, margin: 1, errorCorrectionLevel: 'M' })
+    const itemsSummary = (order.items || []).map(it => {
+      const p = products.find(prod => prod.id === it.productId);
+      return `• ${p?.name || 'صنف'} (${it.quantity}x) = ${(it.price * it.quantity).toFixed(2)} د.ب`;
+    }).join('\n');
+
+    const qrData = `مودرن هاوس للتجارة
+إيصال مبيعات: ${order.orderNumber}
+التاريخ: ${formatDate(order.date)}
+الأصناف:
+${itemsSummary}
+الإجمالي: ${order.total} د.ب
+الرابط: ${invoiceUrl}`;
+
+    QRCode.toDataURL(qrData, { width: 130, margin: 1, errorCorrectionLevel: 'M' })
       .then(url => setQrCodeDataUrl(url))
       .catch(err => console.error('Failed to generate QR code', err));
-  }, [order, invSettings?.publicServerUrl]);
+  }, [order, invSettings?.publicServerUrl, products]);
 
   const handlePrint = () => {
     window.print();
@@ -70,9 +83,20 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
       })
       .join('\n');
 
+    let base = invSettings?.publicServerUrl?.trim();
+    if (!base || base.includes('trycloudflare.com')) {
+      if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.startsWith('file:')) {
+        base = window.location.origin;
+      } else {
+        base = 'https://modern-house-oms.vercel.app';
+      }
+    }
+    base = base.replace(/\/+$/, '');
+    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
+
     const message = language === 'ar'
-      ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتعاملك مع ${settings.footerText || 'Modern House for Trading'}!\n\nتفاصيل طلبك #${order.orderNumber}:\n${itemsSummary}\n\nالإجمالي: ${formatCurrency(order.total)}\nطريقة الدفع: ${order.paymentMethod}\nالتاريخ: ${formatDate(order.date)}\n\nنتمنى لك يوماً سعيداً!`
-      : `Hello ${customer?.name || 'Valued Customer'},\nThank you for shopping at ${settings.footerText || 'Modern House for Trading'}!\n\nOrder #${order.orderNumber} summary:\n${itemsSummary}\n\nTotal: ${formatCurrency(order.total)}\nPayment: ${order.paymentMethod}\nDate: ${formatDate(order.date)}\n\nHave a wonderful day!`;
+      ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتعاملك مع مودرن هاوس للتجارة!\n\n🧾 إيصال مبيعات #${order.orderNumber}:\n${itemsSummary}\n\n💰 الإجمالي: ${formatCurrency(order.total)}\n💳 طريقة الدفع: ${order.paymentMethod}\n📅 التاريخ: ${formatDate(order.date)}\n🔗 الرابط الرقمي: ${invoiceUrl}\n\nنتمنى لك يوماً سعيداً!`
+      : `Hello ${customer?.name || 'Valued Customer'},\nThank you for shopping at Modern House for Trading!\n\n🧾 Sales Receipt #${order.orderNumber}:\n${itemsSummary}\n\n💰 Total: ${formatCurrency(order.total)}\n💳 Payment: ${order.paymentMethod}\n📅 Date: ${formatDate(order.date)}\n🔗 Digital Link: ${invoiceUrl}\n\nHave a wonderful day!`;
 
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');

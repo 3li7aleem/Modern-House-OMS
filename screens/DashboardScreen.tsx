@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../contexts/AppContext';
+import { useSettings } from '../contexts/SettingsContext';
 import SalesChart from '../components/dashboard/SalesChart';
 import { Order, Delivery, Quotation } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -13,15 +14,13 @@ import {
   ChevronRight, Store, AlertTriangle, ArrowUpRight, FileSpreadsheet
 } from 'lucide-react';
 
-const CLOUD_URL_DEFAULT = 'https://exchanges-exclusively-cube-cayman.trycloudflare.com';
-const LAN_URL_DEFAULT = 'http://192.168.8.29:3000';
-
 const DashboardScreen: React.FC = () => {
   const { 
     orders, products, customers, expenses, deliveries, 
     purchaseOrders, repairs, quotations = [], requests = [], setActiveScreen, 
     currentUser, logout 
   } = useAppContext();
+  const { settings } = useSettings();
   
   const { t, formatCurrency, formatDate, language } = useTranslation();
   const isAr = language === 'ar';
@@ -31,15 +30,29 @@ const DashboardScreen: React.FC = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
 
+  const activeCloudUrl = useMemo(() => {
+    let base = settings.invoiceSettings?.publicServerUrl?.trim();
+    if (!base || base.includes('trycloudflare.com')) {
+      if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.startsWith('file:')) {
+        base = window.location.origin;
+      } else {
+        base = 'https://washer-lines-shop-shark.trycloudflare.com';
+      }
+    }
+    return base;
+  }, [settings.invoiceSettings?.publicServerUrl]);
+
+  const activeLanUrl = 'http://localhost:3050';
+
   useEffect(() => {
-    const targetUrl = activeTabUrl === 'cloud' ? CLOUD_URL_DEFAULT : LAN_URL_DEFAULT;
+    const targetUrl = activeTabUrl === 'cloud' ? activeCloudUrl : activeLanUrl;
     QRCode.toDataURL(targetUrl, { width: 220, margin: 1 })
       .then(setQrCodeDataUrl)
       .catch(() => {});
-  }, [activeTabUrl]);
+  }, [activeTabUrl, activeCloudUrl]);
 
   const handleCopyLink = () => {
-    const targetUrl = activeTabUrl === 'cloud' ? CLOUD_URL_DEFAULT : LAN_URL_DEFAULT;
+    const targetUrl = activeTabUrl === 'cloud' ? activeCloudUrl : activeLanUrl;
     navigator.clipboard.writeText(targetUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -120,7 +133,7 @@ const DashboardScreen: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {isAr ? 'مؤسسة البيت الحديث للتجارة' : 'Modern House for Trading'}
+                {isAr ? 'مودرن هاوس للتجارة' : 'Modern House for Trading'}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                 OMS v1.1
@@ -128,8 +141,8 @@ const DashboardScreen: React.FC = () => {
             </div>
             <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {isAr 
-                ? 'إدارة معارض المطابخ الحديثة • الأجهزة البلت إن • نقاط البيع السحابية' 
-                : 'Modern Kitchens Showroom • Built-in Appliances • Cloud POS Operations'}
+                ? 'إدارة مبيعات مودرن هاوس • أجهزة Built-in • إكسسوارات وأحواض المطابخ استانلس ستيل' 
+                : 'Modern House Sales Management • Built-in Appliances • Kitchen Accessories & Stainless Sinks'}
             </p>
           </div>
         </div>
@@ -197,7 +210,7 @@ const DashboardScreen: React.FC = () => {
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
                 {currentUser?.name 
                   ? (isAr ? `أهلاً بك، ${currentUser.name} 👋` : `Welcome back, ${currentUser.name} 👋`) 
-                  : (isAr ? 'أهلاً بك في منظومة البيت الحديث 👋' : 'Welcome to Modern House OMS 👋')}
+                  : (isAr ? 'أهلاً بك في منظومة مودرن هاوس 👋' : 'Welcome to Modern House OMS 👋')}
               </h1>
               <p className="hidden sm:block text-xs md:text-sm text-slate-300/90 leading-relaxed">
                 {isAr 

@@ -16,6 +16,7 @@ for (const key of Object.keys(localStorage)) if (isPreference(key)) localStorage
 for (const [key, value] of Object.entries(preferences)) localStorage.setItem(key, value);
 if (!localStorage.getItem('language')) localStorage.setItem('language', 'ar');
 localStorage.removeItem('oms_pin_session_uid');
+localStorage.removeItem('oms_local_session_uid');
 const originalSet = Storage.prototype.setItem;
 const originalRemove = Storage.prototype.removeItem;
 Storage.prototype.setItem = function(key, value) {

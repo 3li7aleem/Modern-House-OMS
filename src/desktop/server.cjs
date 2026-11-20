@@ -165,7 +165,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
         currentVersion: '1.1.0',
         latestVersion: '1.1.0',
         updateAvailable: false,
-        releaseNotes: 'نظام إدارة العمليات الشامل - مؤسسة البيت الحديث (OMS v1.1.0). يشمل نقاط البيع، المخزون، عروض الأسعار، وقاعدة بيانات محلية سحابية.',
+        releaseNotes: 'نظام إدارة العمليات الشامل - مودرن هاوس للتجارة (OMS v1.1.0). يشمل نقاط البيع، المخزون، عروض الأسعار، وقاعدة بيانات محلية سحابية.',
         apkUrl: '/download/Modern-House-OMS.apk',
         exeUrl: '/download/Modern-House-OMS-Setup.exe'
       }));
@@ -312,7 +312,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
             '</div>' +
             '<div class="verification">' +
               '<span style="font-size:20px;">🛡️</span>' +
-              '<div><strong>التحقق الرقمي المعتمد:</strong> هذه الفاتورة صادرة إلكترونياً من نظام البيت الحديث (Modern House OMS) ومسجلة في قاعدة البيانات الرسمية.</div>' +
+              '<div><strong>التحقق الرقمي المعتمد:</strong> هذه الفاتورة صادرة إلكترونياً من نظام مودرن هاوس للتجارة (Modern House OMS) ومسجلة في قاعدة البيانات الرسمية.</div>' +
             '</div>' +
             '<div class="actions">' +
               '<button class="btn" onclick="window.print()">🖨️ طباعة الفاتورة / حفظ كـ PDF</button>' +

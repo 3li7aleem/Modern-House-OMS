@@ -38,9 +38,20 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
       })
       .join('\n');
 
+    let base = settings.invoiceSettings?.publicServerUrl?.trim();
+    if (!base || base.includes('trycloudflare.com')) {
+      if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.startsWith('file:')) {
+        base = window.location.origin;
+      } else {
+        base = 'https://modern-house-oms.vercel.app';
+      }
+    }
+    base = base.replace(/\/+$/, '');
+    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
+
     const message = isAr
-      ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتسوقك وثقتك بـ شركة مودرن هاوس للتجارة!\n\n🧾 *تفاصيل الفاتورة الضريبية رقم:* *${order.orderNumber}*\n${itemsList}\n\n💰 *المبلغ الإجمالي:* *${formatCurrency(order.total)}*\n💳 *طريقة الدفع:* ${order.paymentMethod}\n📅 *تاريخ الفاتورة:* ${formatDate(order.date)}\n\nنتمنى لك يوماً سعيداً ويسعدنا دائماً خدمتك! 🤍✨`
-      : `Hello ${customer?.name || 'Valued Customer'},\nThank you for shopping with Modern House for Trading!\n\n🧾 *Tax Invoice Details #:* *${order.orderNumber}*\n${itemsList}\n\n💰 *Grand Total:* *${formatCurrency(order.total)}*\n💳 *Payment Method:* ${order.paymentMethod}\n📅 *Date:* ${formatDate(order.date)}\n\nHave a wonderful day and always happy to serve you! 🤍✨`;
+      ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتسوقك وثقتك بـ مودرن هاوس للتجارة!\n\n🧾 *تفاصيل فاتورة المبيعات رقم:* *${order.orderNumber}*\n${itemsList}\n\n💰 *المبلغ الإجمالي:* *${formatCurrency(order.total)}*\n💳 *طريقة الدفع:* ${order.paymentMethod}\n📅 *تاريخ الفاتورة:* ${formatDate(order.date)}\n🔗 *رابط الفاتورة السحابية:* ${invoiceUrl}\n\nنتمنى لك يوماً سعيداً ويسعدنا دائماً خدمتك! 🤍✨`
+      : `Hello ${customer?.name || 'Valued Customer'},\nThank you for shopping with Modern House for Trading!\n\n🧾 *Sales Invoice Details #:* *${order.orderNumber}*\n${itemsList}\n\n💰 *Grand Total:* *${formatCurrency(order.total)}*\n💳 *Payment Method:* ${order.paymentMethod}\n📅 *Date:* ${formatDate(order.date)}\n🔗 *Digital Invoice Link:* ${invoiceUrl}\n\nHave a wonderful day and always happy to serve you! 🤍✨`;
 
     const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');

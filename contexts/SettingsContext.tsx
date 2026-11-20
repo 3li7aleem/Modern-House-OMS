@@ -41,10 +41,10 @@ export interface InvoiceSettings {
 }
 
 export const DEFAULT_INVOICE_SETTINGS: InvoiceSettings = {
-    companyNameAr: 'مؤسسة مودرن هاوس للتجارة',
+    companyNameAr: 'مودرن هاوس للتجارة',
     companyNameEn: 'Modern House for Trading',
     crNumber: '147987-2',
-    vatNumber: '220000000000002',
+    vatNumber: '',
     phone: '35965477 - 77905477',
     address: 'سوق واقف - مدينة حمد - مملكة البحرين',
     showWarranty: true,
@@ -52,7 +52,7 @@ export const DEFAULT_INVOICE_SETTINGS: InvoiceSettings = {
     showDiscount: true,
     showStampSignature: true,
     showQrCode: true,
-    publicServerUrl: 'https://exchanges-exclusively-cube-cayman.trycloudflare.com',
+    publicServerUrl: '',
     footerNote: 'البضاعة المباعة تخضع لشروط الضمان المعتمدة. يُرجى الاحتفاظ بالفاتورة الأصلية.',
     warrantyTerms: 'ضمان شامل على الأجهزة حسب بطاقة الوكيل المعتمدة'
 };

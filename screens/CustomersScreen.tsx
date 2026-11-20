@@ -439,7 +439,7 @@ const CustomersScreen: React.FC = () => {
                 {language === 'ar' ? 'إدارة العملاء والزبائن' : 'Customer Relationship Management'}
               </h2>
               <p className="text-xs sm:text-sm text-text-secondary dark:text-dark-text-secondary mt-0.5">
-                {language === 'ar' ? 'قاعدة بيانات عملاء البيت الحديث، تتبع الفواتير، ومبيعات الزبائن' : 'Modern House customer database, order history & client tracking'}
+                {language === 'ar' ? 'قاعدة بيانات عملاء مودرن هاوس للتجارة، تتبع الفواتير، ومبيعات الزبائن' : 'Modern House customer database, order history & client tracking'}
               </p>
             </div>
           </div>
@@ -793,7 +793,7 @@ const CustomersScreen: React.FC = () => {
                   const isSelected = selectedCustomerIds.includes(customer.id);
                   const whatsAppUrl = `https://wa.me/${cleanPhoneForWhatsApp(customer.phone)}?text=${encodeURIComponent(
                     language === 'ar' 
-                      ? `مرحباً ${customer.name}، معك البيت الحديث للتجارة.` 
+                      ? `مرحباً ${customer.name}، معك مودرن هاوس للتجارة.` 
                       : `Hello ${customer.name}, Modern House for Trading.`
                   )}`;
 
@@ -980,7 +980,7 @@ const CustomersScreen: React.FC = () => {
             const isSelected = selectedCustomerIds.includes(customer.id);
             const whatsAppUrl = `https://wa.me/${cleanPhoneForWhatsApp(customer.phone)}?text=${encodeURIComponent(
               language === 'ar' 
-                ? `مرحباً ${customer.name}، معك البيت الحديث للتجارة.` 
+                ? `مرحباً ${customer.name}، معك مودرن هاوس للتجارة.` 
                 : `Hello ${customer.name}, Modern House for Trading.`
             )}`;
 

@@ -261,7 +261,7 @@ const SettingsScreen: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="text-xl font-bold text-text-primary dark:text-dark-text-primary flex items-center gap-2">
                     <FileText className="w-5 h-5 text-amber-500" />
-                    <span>{isAr ? 'تخصيص الفاتورة الضريبية الرسمية' : 'Tax Invoice Customization'}</span>
+                    <span>{isAr ? 'تخصيص الفاتورة الرسمية' : 'Invoice Customization'}</span>
                   </h4>
                   <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     {isAr ? 'تحديث تلقائي فوري' : 'Live Auto-Saved'}
@@ -311,17 +311,7 @@ const SettingsScreen: React.FC = () => {
                         className="bg-background border border-border text-text-primary text-xs rounded-xl focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white font-mono"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-                        {isAr ? 'الرقم الضريبي (VAT Reg No)' : 'VAT Registration Number'}
-                      </label>
-                      <input 
-                        type="text" 
-                        value={settings.invoiceSettings?.vatNumber ?? '220000000000002'} 
-                        onChange={e => updateInvoiceSettings({ vatNumber: e.target.value })}
-                        className="bg-background border border-border text-text-primary text-xs rounded-xl focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white font-mono"
-                      />
-                    </div>
+
                     <div>
                       <label className="block text-xs font-bold text-text-secondary dark:text-dark-text-secondary mb-1.5">
                         {isAr ? 'أرقام الهاتف والتواصل' : 'Contact Phones'}
@@ -379,7 +369,7 @@ const SettingsScreen: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <button 
                           type="button" 
-                          onClick={() => updateInvoiceSettings({ publicServerUrl: 'https://exchanges-exclusively-cube-cayman.trycloudflare.com' })}
+                          onClick={() => updateInvoiceSettings({ publicServerUrl: 'https://washer-lines-shop-shark.trycloudflare.com' })}
                           className="text-[11px] text-amber-500 hover:underline font-bold"
                         >
                           {isAr ? 'السحابة الحالية' : 'Cloud URL'}
@@ -387,7 +377,7 @@ const SettingsScreen: React.FC = () => {
                         <span className="text-slate-300">|</span>
                         <button 
                           type="button" 
-                          onClick={() => updateInvoiceSettings({ publicServerUrl: 'http://192.168.8.29:3000' })}
+                          onClick={() => updateInvoiceSettings({ publicServerUrl: 'http://localhost:3050' })}
                           className="text-[11px] text-sky-500 hover:underline font-bold"
                         >
                           {isAr ? 'الشبكة المحلية (Wi-Fi)' : 'Local LAN'}
@@ -396,16 +386,16 @@ const SettingsScreen: React.FC = () => {
                     </label>
                     <input 
                       type="url" 
-                      value={settings.invoiceSettings?.publicServerUrl ?? 'https://exchanges-exclusively-cube-cayman.trycloudflare.com'} 
+                      value={settings.invoiceSettings?.publicServerUrl ?? ''} 
                       onChange={e => updateInvoiceSettings({ publicServerUrl: e.target.value })}
-                      placeholder="https://exchanges-exclusively-cube-cayman.trycloudflare.com"
+                      placeholder="https://washer-lines-shop-shark.trycloudflare.com"
                       className="bg-background border border-border text-text-primary text-xs rounded-xl focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white font-mono"
                     />
                     <span className="text-[10px] text-text-secondary dark:text-dark-text-secondary mt-1 block">
                       {isAr 
                         ? 'مسار الفاتورة يولد تلقائياً: ' 
                         : 'Generated path: '} 
-                      <code className="text-amber-500 font-mono">{`${settings.invoiceSettings?.publicServerUrl || 'https://exchanges-exclusively-cube-cayman.trycloudflare.com'}/invoice/{id}`}</code>
+                      <code className="text-amber-500 font-mono">{`${settings.invoiceSettings?.publicServerUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://modern-house-oms.vercel.app')}/invoice/{id}`}</code>
                     </span>
                   </div>
                 </div>

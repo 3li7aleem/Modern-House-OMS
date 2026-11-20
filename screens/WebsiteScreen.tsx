@@ -282,7 +282,7 @@ const WebsiteScreen: React.FC = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-300 border border-amber-500/30 backdrop-blur-md mb-6 shadow-lg">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{isAr ? 'مؤسسة البيت الحديث للتجارة — مملكة البحرين' : 'Modern House for Trading — Bahrain'}</span>
+            <span>{isAr ? 'مودرن هاوس للتجارة — مملكة البحرين' : 'Modern House for Trading — Bahrain'}</span>
           </div>
 
           {/* Main Title */}
@@ -499,7 +499,7 @@ const WebsiteScreen: React.FC = () => {
             <Logo className="h-10 w-auto" showText={true} textColorClass="text-white" />
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
               {isAr 
-                ? 'مؤسسة البيت الحديث للتجارة — رواد تصميم وتفصيل المطابخ الفاخرة وأحدث أجهزة البلت إن وأحواض النانو في مملكة البحرين.' 
+                ? 'مودرن هاوس للتجارة — رواد تصميم وتفصيل المطابخ الفاخرة وأحدث أجهزة البلت إن وأحواض النانو في مملكة البحرين.' 
                 : 'Modern House for Trading — Pioneers in luxury custom kitchens, built-in appliances, and designer sinks in Bahrain.'}
             </p>
             <div className="flex items-center gap-2 pt-2">
@@ -559,7 +559,7 @@ const WebsiteScreen: React.FC = () => {
             </div>
 
             <p className="text-[10px] text-slate-500 mt-6 md:mt-0">
-              &copy; {new Date().getFullYear()} {isAr ? 'مؤسسة البيت الحديث للتجارة' : 'Modern House for Trading'}.
+              &copy; {new Date().getFullYear()} {isAr ? 'مودرن هاوس للتجارة' : 'Modern House for Trading'}.
             </p>
           </div>
 
