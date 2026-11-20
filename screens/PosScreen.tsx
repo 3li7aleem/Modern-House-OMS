@@ -49,6 +49,9 @@ import {
   Layers,
   QrCode,
   Package,
+  UserCheck,
+  Tag,
+  Receipt,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { StorageImage } from '../components/StorageImage';
@@ -1034,27 +1037,32 @@ const PosScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* RIGHT SECTION: Cart, Customer, Discounts & Checkout Panel */}
-      <div className={`w-full xl:w-[420px] flex-shrink-0 bg-card dark:bg-dark-card rounded-2xl shadow-md flex flex-col border border-border dark:border-dark-border h-full overflow-hidden ${mobileTab === 'catalog' ? 'hidden xl:flex' : 'flex'}`}>
+      {/* RIGHT SECTION: Luxury Enterprise Active Order Cart & Checkout Panel */}
+      <div className={`w-full xl:w-[430px] flex-shrink-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl flex flex-col border border-slate-200/90 dark:border-slate-800 h-full overflow-hidden transition-all ${mobileTab === 'catalog' ? 'hidden xl:flex' : 'flex'}`}>
         {/* Cart Header */}
-        <div className="p-3.5 border-b border-border dark:border-dark-border flex items-center justify-between bg-muted/20">
-          <div className="flex items-center gap-2">
+        <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setMobileTab('catalog')}
-              className="xl:hidden p-1 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-lg flex items-center gap-0.5 text-xs font-semibold mr-1 rtl:mr-0 rtl:ml-1"
+              className="xl:hidden p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl flex items-center gap-0.5 text-xs font-semibold mr-1 rtl:mr-0 rtl:ml-1 transition-colors"
               title={language === 'ar' ? 'الرجوع للمنتجات' : 'Back to products'}
             >
               <ChevronLeft className="w-5 h-5 rtl:rotate-180" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-              <ShoppingCart className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-slate-800 text-amber-400 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-800 dark:border-slate-700">
+              <ShoppingCart className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-text-primary dark:text-dark-text-primary">
-                {language === 'ar' ? 'سلة الطلب الحالي' : 'Active Order'}
-              </h3>
-              <p className="text-[11px] text-text-secondary dark:text-dark-text-secondary">
-                {cartItems.reduce((acc, it) => acc + it.quantity, 0)} {language === 'ar' ? 'قطع مختارة' : 'items total'}
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                  {language === 'ar' ? 'سلة الطلب الحالي' : 'Active Order'}
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black font-mono bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                  {cartItems.reduce((acc, it) => acc + it.quantity, 0)} {language === 'ar' ? 'قطع' : 'items'}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                {cartItems.length} {language === 'ar' ? 'أصناف مختلفة' : 'unique items'}
               </p>
             </div>
           </div>
@@ -1064,70 +1072,102 @@ const PosScreen: React.FC = () => {
             <button
               onClick={handleHoldOrder}
               disabled={cartItems.length === 0}
-              className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-lg text-xs font-semibold flex items-center gap-1 disabled:opacity-40 transition-colors"
-              title={language === 'ar' ? 'تعليق الطلب (F8)' : 'Park / Hold Cart (F8)'}
+              className="px-2.5 py-1.5 text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 rounded-xl text-xs font-bold flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-xs"
+              title={language === 'ar' ? 'تعليق الطلب وحفظه مؤقتاً (F8)' : 'Park / Hold Cart (F8)'}
             >
-              <PauseCircle className="w-4 h-4" />
+              <PauseCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span className="hidden sm:inline">{language === 'ar' ? 'تعليق' : 'Hold'}</span>
+              <span className="text-[9px] font-mono opacity-70 hidden md:inline">F8</span>
             </button>
 
             {/* Clear Cart */}
             <button
               onClick={clearCart}
               disabled={cartItems.length === 0}
-              className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg text-xs font-semibold flex items-center gap-1 disabled:opacity-40 transition-colors"
-              title={language === 'ar' ? 'إفراغ السلة (F9)' : 'Clear Cart (F9)'}
+              className="p-2 text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-bold disabled:opacity-30 disabled:pointer-events-none transition-all"
+              title={language === 'ar' ? 'إفراغ كامل السلة (F9)' : 'Clear Cart (F9)'}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Customer & Cashier Selector */}
-        <div className="p-3 border-b border-border dark:border-dark-border bg-gray-50/50 dark:bg-gray-900/30 space-y-2">
+        {/* Customer & Cashier Selector Card */}
+        <div className="p-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 space-y-2.5">
           {/* Customer Search / Selection */}
           <div className="relative">
-            <div className="flex items-center gap-1.5">
-              <div className="relative flex-1">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5 rtl:left-auto rtl:right-3" />
-                <input
-                  type="text"
-                  value={selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.phone})` : customerSearchQuery}
-                  onChange={e => {
+            {selectedCustomer ? (
+              <div className="flex items-center justify-between p-2 rounded-xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 shadow-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                    {selectedCustomer.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-xs text-blue-950 dark:text-blue-100 truncate">{selectedCustomer.name}</span>
+                      {typeof (selectedCustomer as any).loyaltyPoints === 'number' && (selectedCustomer as any).loyaltyPoints > 0 && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-500 text-slate-950">
+                          ⭐ {(selectedCustomer as any).loyaltyPoints}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono block">{selectedCustomer.phone}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
                     setCustomerId('');
-                    setCustomerSearchQuery(e.target.value);
-                    setIsCustomerDropdownOpen(true);
+                    setCustomerSearchQuery('');
                   }}
-                  onFocus={() => setIsCustomerDropdownOpen(true)}
-                  placeholder={language === 'ar' ? 'عميل نقدي عام (أو ابحث بالاسم/الهاتف)...' : 'Walk-in (or search customer)...'}
-                  className="w-full pl-8 pr-7 rtl:pl-7 rtl:pr-8 py-1.5 bg-white dark:bg-gray-800 border border-border dark:border-dark-border rounded-xl text-xs focus:ring-2 focus:ring-primary/20 outline-none"
-                />
-                {(customerId || customerSearchQuery) && (
-                  <button
-                    onClick={() => {
-                      setCustomerId('');
-                      setCustomerSearchQuery('');
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
+                  className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                  title={language === 'ar' ? 'إلغاء اختيار العميل (العودة لعميل نقدي عام)' : 'Clear Customer'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <div className="relative flex-1">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5 rtl:left-auto rtl:right-3" />
+                  <input
+                    type="text"
+                    value={customerSearchQuery}
+                    onChange={e => {
+                      setCustomerId('');
+                      setCustomerSearchQuery(e.target.value);
+                      setIsCustomerDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsCustomerDropdownOpen(true)}
+                    placeholder={language === 'ar' ? 'عميل نقدي عام (ابحث بالاسم/الهاتف)...' : 'Walk-in (search customer)...'}
+                    className="w-full pl-8 pr-7 rtl:pl-7 rtl:pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400"
+                  />
+                  {customerSearchQuery && (
+                    <button
+                      onClick={() => {
+                        setCustomerSearchQuery('');
+                        setIsCustomerDropdownOpen(false);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
 
-              {/* Add New Customer Button */}
-              <button
-                onClick={() => setIsAddCustomerModalOpen(true)}
-                className="p-1.5 bg-primary text-white rounded-xl hover:bg-primary-hover flex-shrink-0 transition-colors"
-                title={language === 'ar' ? 'إضافة عميل جديد' : 'New Customer'}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+                {/* Add New Customer Button */}
+                <button
+                  onClick={() => setIsAddCustomerModalOpen(true)}
+                  className="p-2 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl flex-shrink-0 transition-colors shadow-xs"
+                  title={language === 'ar' ? 'إضافة عميل جديد' : 'New Customer'}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Customer Dropdown Results */}
             {isCustomerDropdownOpen && !customerId && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-xl shadow-lg z-30 max-h-48 overflow-y-auto divide-y divide-border/50 dark:divide-dark-border/50 text-xs">
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-30 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-750 text-xs">
                 {/* Walk-in Customer option */}
                 <div
                   onClick={() => {
@@ -1135,9 +1175,9 @@ const PosScreen: React.FC = () => {
                     setCustomerSearchQuery('');
                     setIsCustomerDropdownOpen(false);
                   }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex justify-between items-center font-semibold text-primary"
+                  className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer flex justify-between items-center font-bold text-blue-600 dark:text-blue-400"
                 >
-                  <span>{language === 'ar' ? 'عميل نقدي عام (افتراضي)' : 'Walk-in Customer (Default)'}</span>
+                  <span>{language === 'ar' ? '👤 عميل نقدي عام (افتراضي)' : '👤 Walk-in Customer (Default)'}</span>
                 </div>
 
                 {filteredCustomers.map(c => (
@@ -1148,16 +1188,16 @@ const PosScreen: React.FC = () => {
                       setCustomerSearchQuery('');
                       setIsCustomerDropdownOpen(false);
                     }}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex justify-between items-center"
+                    className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer flex justify-between items-center transition-colors"
                   >
-                    <span className="font-medium text-text-primary dark:text-dark-text-primary">{c.name}</span>
-                    <span className="text-gray-400 font-mono text-[11px]">{c.phone}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{c.name}</span>
+                    <span className="text-slate-400 font-mono text-[11px]">{c.phone}</span>
                   </div>
                 ))}
 
                 {filteredCustomers.length === 0 && customerSearchQuery && (
-                  <div className="p-2.5 text-center text-gray-400 text-xs">
-                    {language === 'ar' ? 'لا يوجد عميل بهذا الاسم/الرقم' : 'No customer found'}
+                  <div className="p-3 text-center text-slate-400 text-xs">
+                    {language === 'ar' ? 'لا يوجد عميل بهذا الاسم أو الرقم' : 'No customer found'}
                   </div>
                 )}
               </div>
@@ -1171,9 +1211,9 @@ const PosScreen: React.FC = () => {
               <select
                 value={employeeId}
                 onChange={e => setEmployeeId(e.target.value)}
-                className="w-full py-1.5 px-2 bg-white dark:bg-gray-800 border border-border dark:border-dark-border rounded-xl text-xs outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer font-medium"
+                className="w-full py-1.5 px-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none cursor-pointer text-slate-700 dark:text-slate-200"
               >
-                <option value="">{language === 'ar' ? 'اختر الكاشير...' : 'Select Cashier...'}</option>
+                <option value="">{language === 'ar' ? '👤 الكاشير المسجل...' : '👤 Select Cashier...'}</option>
                 {employees.map(e => (
                   <option key={e.id} value={e.id}>
                     {e.name}
@@ -1187,125 +1227,157 @@ const PosScreen: React.FC = () => {
               <select
                 value={deliveryOption}
                 onChange={e => setDeliveryOption(e.target.value as any)}
-                className="w-full py-1.5 px-2 bg-white dark:bg-gray-800 border border-border dark:border-dark-border rounded-xl text-xs outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer font-medium"
+                className="w-full py-1.5 px-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none cursor-pointer text-slate-700 dark:text-slate-200"
               >
-                <option value="none">{language === 'ar' ? 'بدون توصيل (استلام)' : 'No Delivery'}</option>
+                <option value="none">{language === 'ar' ? '🏪 استلام من المعرض' : '🏪 In-Store'}</option>
                 <option value="charge">
-                  {language === 'ar' ? `توصيل مدفوع (+${formatCurrency(DELIVERY_FEE)})` : `Delivery (+${formatCurrency(DELIVERY_FEE)})`}
+                  {language === 'ar' ? `🚚 توصيل (+${formatCurrency(DELIVERY_FEE)})` : `🚚 Delivery (+${formatCurrency(DELIVERY_FEE)})`}
                 </option>
-                <option value="free">{language === 'ar' ? 'توصيل مجاني' : 'Free Delivery'}</option>
+                <option value="free">{language === 'ar' ? '✨ توصيل مجاني' : '✨ Free Delivery'}</option>
               </select>
             </div>
           </div>
         </div>
 
         {/* Cart Items List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-          {cartItems.map(item => (
-            <div
-              key={item.product.id}
-              className={`p-2.5 rounded-xl bg-gray-50/70 dark:bg-gray-800/40 border border-border/70 dark:border-dark-border/70 flex items-center justify-between gap-3 group transition-all duration-300 ${
-                lastAddedIdRef.current === item.product.id ? 'animate-glow-pulse border-primary ring-2 ring-primary/40 bg-primary/5' : ''
-              }`}
-            >
-              <div className="flex-1 min-w-0">
-                <h5 className="text-xs font-bold text-text-primary dark:text-dark-text-primary truncate">
-                  {item.product.name}
-                </h5>
-                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-text-secondary dark:text-dark-text-secondary">
-                  <span className="font-bold text-primary">
-                    {formatCurrency(item.product.salePrice)}
-                  </span>
-                  <span>×</span>
-                  <span>{item.quantity}</span>
-                  <span>=</span>
-                  <span className="font-extrabold text-text-primary dark:text-dark-text-primary">
-                    {formatCurrency(item.product.salePrice * item.quantity)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Quantity Controls & Remove */}
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center bg-white dark:bg-gray-900 border border-border dark:border-dark-border rounded-lg p-0.5">
-                  <button
-                    onClick={() => updateQuantity(item.product.id, -1)}
-                    className="p-1 text-gray-500 hover:text-red-500 transition-colors"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max={item.product.stock}
-                    value={item.quantity}
-                    onChange={e => setExactQuantity(item.product.id, parseInt(e.target.value) || 1)}
-                    className="w-8 text-center text-xs font-bold bg-transparent border-none outline-none p-0"
-                  />
-                  <button
-                    onClick={() => updateQuantity(item.product.id, 1)}
-                    className="p-1 text-gray-500 hover:text-primary transition-colors"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {cartItems.map(item => {
+            const isRecentlyAdded = lastAddedIdRef.current === item.product.id;
+            const itemTotal = item.product.salePrice * item.quantity;
+            return (
+              <div
+                key={item.product.id}
+                className={`p-2.5 rounded-2xl bg-white dark:bg-slate-800/80 border transition-all duration-300 shadow-xs hover:shadow-md flex items-center gap-2.5 group ${
+                  isRecentlyAdded
+                    ? 'border-amber-500 ring-2 ring-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20'
+                    : 'border-slate-200/80 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                }`}
+              >
+                {/* Product Thumbnail */}
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center flex-shrink-0 relative">
+                  {item.product.imageUrl ? (
+                    <StorageImage
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <Package className="w-5 h-5 text-slate-400" />
+                  )}
                 </div>
 
-                <button
-                  onClick={() => removeFromCart(item.product.id)}
-                  className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                  title="Remove item"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                {/* Product Details */}
+                <div className="flex-1 min-w-0">
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate" title={item.product.name}>
+                    {item.product.name}
+                  </h5>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[11px]">
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {formatCurrency(item.product.salePrice)}
+                    </span>
+                    <span className="text-slate-400">×</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{item.quantity}</span>
+                    <span className="text-slate-400">=</span>
+                    <span className="font-black text-slate-950 dark:text-white font-mono">
+                      {formatCurrency(itemTotal)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quantity Controls & Remove */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5">
+                    <button
+                      onClick={() => updateQuantity(item.product.id, -1)}
+                      className="w-6 h-6 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                      title="Decrease"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.product.stock}
+                      value={item.quantity}
+                      onChange={e => setExactQuantity(item.product.id, parseInt(e.target.value) || 1)}
+                      className="w-8 text-center text-xs font-black bg-transparent border-none outline-none p-0 text-slate-900 dark:text-white"
+                    />
+                    <button
+                      onClick={() => updateQuantity(item.product.id, 1)}
+                      disabled={item.quantity >= item.product.stock}
+                      className="w-6 h-6 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                      title="Increase"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => removeFromCart(item.product.id)}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors"
+                    title="Remove item"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {cartItems.length === 0 && (
-            <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center text-text-secondary dark:text-dark-text-secondary p-4">
-              <ShoppingCart className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-2 stroke-[1.5]" />
-              <p className="text-xs font-semibold">
-                {language === 'ar' ? 'السلة فارغة حالياً' : 'Cart is empty'}
+            <div className="h-full min-h-[190px] flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/40 dark:bg-slate-900/30 my-auto">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 shadow-inner">
+                <ShoppingCart className="w-7 h-7" />
+              </div>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {language === 'ar' ? 'سلة الطلب فارغة حالياً' : 'Cart is currently empty'}
               </p>
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                {language === 'ar' ? 'انقر على المنتجات أو امسح الباركود لإضافتها' : 'Click products or scan barcode to add'}
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[220px]">
+                {language === 'ar' ? 'انقر على المنتجات لإضافتها أو استخدم ماسح الباركود السريع' : 'Click items or scan barcodes to start an order'}
               </p>
+              <div className="mt-4 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+                <span className="px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 font-bold">F2 بحث</span>
+                <span className="px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 font-bold">F8 تعليق</span>
+                <span className="px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 font-bold">F10 دفع</span>
+              </div>
             </div>
           )}
         </div>
 
         {/* Pricing, Discounts, Payment & Checkout Panel */}
-        <div className="p-3.5 bg-gray-50 dark:bg-gray-900/80 border-t border-border dark:border-dark-border space-y-3 text-xs">
+        <div className="p-3 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-2.5 text-xs">
           {/* Discount Controls */}
-          <div className="p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-border dark:border-dark-border space-y-2">
+          <div className="p-2.5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 space-y-2 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-text-secondary dark:text-dark-text-secondary flex items-center gap-1">
-                <Percent className="w-3.5 h-3.5 text-primary" />
-                {language === 'ar' ? 'الخصم' : 'Discount'}
+              <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-amber-500" />
+                {language === 'ar' ? 'الخصم الترويجي' : 'Discount'}
               </span>
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setDiscountType('percent')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                    discountType === 'percent'
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                  }`}
-                >
-                  %
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDiscountType('fixed')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                    discountType === 'fixed'
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                  }`}
-                >
-                  BHD
-                </button>
+                <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType('percent')}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-colors ${
+                      discountType === 'percent'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    %
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType('fixed')}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-colors ${
+                      discountType === 'fixed'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    BHD
+                  </button>
+                </div>
                 <input
                   type="number"
                   min="0"
@@ -1313,7 +1385,7 @@ const PosScreen: React.FC = () => {
                   value={discountValue || ''}
                   onChange={e => setDiscountValue(parseFloat(e.target.value) || 0)}
                   placeholder="0"
-                  className="w-16 px-1.5 py-0.5 text-right bg-gray-50 dark:bg-gray-900 border border-border dark:border-dark-border rounded-md text-xs font-bold outline-none"
+                  className="w-16 px-2 py-1 text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-black outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -1328,10 +1400,10 @@ const PosScreen: React.FC = () => {
                     setDiscountType('percent');
                     setDiscountValue(pct);
                   }}
-                  className={`flex-1 py-1 rounded-md text-[10px] font-semibold transition-colors ${
+                  className={`flex-1 py-1 rounded-lg text-[10px] font-black transition-all ${
                     discountType === 'percent' && discountValue === pct
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-bold'
-                      : 'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                      ? 'bg-amber-500 text-slate-950 font-black shadow-xs ring-1 ring-amber-400'
+                      : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {pct}%
@@ -1341,7 +1413,7 @@ const PosScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDiscountValue(0)}
-                  className="px-2 py-1 rounded-md text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  className="px-2 py-1 rounded-lg text-[10px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                 >
                   {language === 'ar' ? 'إلغاء' : 'Reset'}
                 </button>
@@ -1351,14 +1423,14 @@ const PosScreen: React.FC = () => {
 
           {/* Payment Method Selector */}
           <div className="space-y-1.5">
-            <span className="font-semibold text-text-secondary dark:text-dark-text-secondary block">
+            <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300 block">
               {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
             </span>
             <div className="grid grid-cols-4 gap-1.5">
               {[
-                { id: 'Cash', label: language === 'ar' ? 'نقد (كاش)' : 'Cash', icon: Banknote },
+                { id: 'Cash', label: language === 'ar' ? 'نقداً (كاش)' : 'Cash', icon: Banknote },
                 { id: 'Card', label: language === 'ar' ? 'بطاقة' : 'Card', icon: CreditCard },
-                { id: 'BenefitPay', label: 'BenefitPay', icon: Banknote },
+                { id: 'BenefitPay', label: 'بنفت بي', icon: QrCode },
                 { id: 'Split', label: language === 'ar' ? 'دفع مزدوج' : 'Split', icon: Layers },
               ].map(method => {
                 const Icon = method.icon;
@@ -1370,8 +1442,8 @@ const PosScreen: React.FC = () => {
                     onClick={() => setPaymentMethod(method.id as any)}
                     className={`py-2 px-1 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-primary text-white border-primary shadow-xs'
-                        : 'bg-white dark:bg-gray-800 border-border dark:border-dark-border text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-750'
+                        ? 'bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-sm ring-2 ring-primary/30'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -1384,18 +1456,18 @@ const PosScreen: React.FC = () => {
 
           {/* BenefitPay Reference Number & QR Button */}
           {paymentMethod === 'BenefitPay' && (
-            <div className="space-y-1.5">
+            <div className="p-2.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-text-secondary dark:text-dark-text-secondary">
+                <label className="text-[11px] font-bold text-rose-900 dark:text-rose-300">
                   {language === 'ar' ? 'رقم عملية بنفت بي المرجعي *' : 'BenefitPay Reference No. *'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowBenefitQrModal(true)}
-                  className="text-rose-500 hover:text-rose-600 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-rose-600 hover:text-rose-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-rose-200 dark:border-rose-800 text-[10px] font-black flex items-center gap-1 cursor-pointer shadow-xs"
                 >
                   <QrCode className="w-3 h-3" />
-                  <span>{language === 'ar' ? 'عرض رمز QR' : 'Show QR'}</span>
+                  <span>{language === 'ar' ? 'رمز QR' : 'Show QR'}</span>
                 </button>
               </div>
               <input
@@ -1404,7 +1476,7 @@ const PosScreen: React.FC = () => {
                 value={benefitPayRefPos}
                 onChange={e => setBenefitPayRefPos(e.target.value)}
                 placeholder="e.g. 987654321"
-                className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-border dark:border-dark-border rounded-xl text-xs focus:ring-1 focus:ring-primary outline-none font-mono"
+                className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-800/80 rounded-xl text-xs focus:ring-2 focus:ring-rose-500/30 outline-none font-mono font-bold"
               />
             </div>
           )}
@@ -1483,9 +1555,9 @@ const PosScreen: React.FC = () => {
 
           {/* Cash Quick Tender & Change Calculator */}
           {paymentMethod === 'Cash' && total > 0 && (
-            <div className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-2">
+            <div className="p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200">
                   {language === 'ar' ? 'المبلغ المستلم من العميل' : 'Cash Tendered'}
                 </span>
                 <input
@@ -1494,7 +1566,7 @@ const PosScreen: React.FC = () => {
                   value={cashTendered}
                   onChange={e => setCashTendered(e.target.value)}
                   placeholder={total.toFixed(3)}
-                  className="w-24 px-2 py-1 text-right bg-white dark:bg-gray-800 border border-emerald-300 dark:border-emerald-700 rounded-lg text-xs font-bold outline-none text-emerald-900 dark:text-emerald-200"
+                  className="w-24 px-2 py-1 text-right bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-lg text-xs font-black outline-none text-emerald-950 dark:text-emerald-200 font-mono"
                 />
               </div>
 
@@ -1503,16 +1575,16 @@ const PosScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCashTendered(total.toFixed(3))}
-                  className="flex-1 py-1 bg-white dark:bg-gray-800 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 rounded-md text-[10px] font-bold border border-emerald-200 dark:border-emerald-800"
+                  className="flex-1 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-lg text-[10px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
                 >
-                  {language === 'ar' ? 'المبلغ بالضبط' : 'Exact'}
+                  {language === 'ar' ? 'بالضبط' : 'Exact'}
                 </button>
                 {[5, 10, 20, 50].map(val => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => setCashTendered(val.toString())}
-                    className="flex-1 py-1 bg-white dark:bg-gray-800 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 rounded-md text-[10px] font-bold border border-emerald-200 dark:border-emerald-800"
+                    className="flex-1 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-lg text-[10px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
                   >
                     {val}
                   </button>
@@ -1521,11 +1593,11 @@ const PosScreen: React.FC = () => {
 
               {/* Change Returned Highlight */}
               {parsedCashTendered > 0 && (
-                <div className="pt-1.5 border-t border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between text-xs font-bold">
-                  <span className="text-emerald-800 dark:text-emerald-300">
+                <div className="pt-2 border-t border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between text-xs font-bold">
+                  <span className="text-emerald-900 dark:text-emerald-300">
                     {language === 'ar' ? 'المتبقي للعميل (الباقي):' : 'Change Due:'}
                   </span>
-                  <span className="text-base text-emerald-700 dark:text-emerald-400">
+                  <span className="text-base font-black font-mono text-emerald-700 dark:text-emerald-400">
                     {formatCurrency(changeDue)}
                   </span>
                 </div>
@@ -1534,53 +1606,60 @@ const PosScreen: React.FC = () => {
           )}
 
           {/* Totals Summary */}
-          <div className="space-y-1.5 pt-1 border-t border-border dark:border-dark-border text-xs">
-            <div className="flex justify-between text-text-secondary dark:text-dark-text-secondary">
+          <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-800 text-xs">
+            <div className="flex justify-between text-slate-500 dark:text-slate-400">
               <span>{language === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
-              <span className="font-semibold">{formatCurrency(subtotal)}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{formatCurrency(subtotal)}</span>
             </div>
 
             {discountAmount > 0 && (
-              <div className="flex justify-between text-emerald-600 font-medium">
+              <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
                 <span>
-                  {language === 'ar' ? 'الخصم' : 'Discount'} ({effectiveDiscountPercent}%)
+                  {language === 'ar' ? 'الخصم الترويجي' : 'Discount'} ({effectiveDiscountPercent}%)
                 </span>
-                <span>-{formatCurrency(discountAmount)}</span>
+                <span className="font-mono">-{formatCurrency(discountAmount)}</span>
               </div>
             )}
 
             {/* VAT Toggle & Amount */}
-            <div className="flex justify-between items-center text-text-secondary dark:text-dark-text-secondary">
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   id="vat-pos-toggle"
                   checked={isVatEnabled}
                   onChange={e => setIsVatEnabled(e.target.checked)}
-                  className="rounded text-primary focus:ring-primary w-3.5 h-3.5"
+                  className="rounded text-primary focus:ring-primary w-3.5 h-3.5 cursor-pointer"
                 />
-                <label htmlFor="vat-pos-toggle" className="cursor-pointer">
+                <label htmlFor="vat-pos-toggle" className="cursor-pointer font-medium">
                   {language === 'ar' ? 'ضريبة القيمة المضافة (10%)' : 'VAT (10%)'}
                 </label>
               </span>
-              <span>{isVatEnabled ? formatCurrency(vatAmount) : formatCurrency(0)}</span>
+              <span className="font-mono font-semibold">{isVatEnabled ? formatCurrency(vatAmount) : formatCurrency(0)}</span>
             </div>
 
             {deliveryOption === 'charge' && (
-              <div className="flex justify-between text-text-secondary dark:text-dark-text-secondary">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>{language === 'ar' ? 'رسوم التوصيل' : 'Delivery Fee'}</span>
-                <span>{formatCurrency(DELIVERY_FEE)}</span>
+                <span className="font-mono font-semibold">{formatCurrency(DELIVERY_FEE)}</span>
               </div>
             )}
 
-            {/* Grand Total */}
-            <div className="pt-2 border-t border-border dark:border-dark-border flex justify-between items-center">
-              <span className="font-bold text-sm text-text-primary dark:text-dark-text-primary">
-                {language === 'ar' ? 'المجموع الإجمالي' : 'Grand Total'}
-              </span>
-              <span className="text-xl font-extrabold text-primary">
-                {formatCurrency(total)}
-              </span>
+            {/* Grand Total Luxury Banner */}
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white border border-slate-800 shadow-md flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">
+                  {language === 'ar' ? 'المبلغ النهائي المطلوب' : 'Total Amount Due'}
+                </span>
+                <span className="text-xs font-medium text-slate-300">
+                  {cartItems.reduce((acc, it) => acc + it.quantity, 0)} {language === 'ar' ? 'قطع شاملة الضريبة' : 'items incl. VAT'}
+                </span>
+              </div>
+              <div className="text-right rtl:text-left">
+                <span className="text-2xl font-black font-mono text-amber-400 tracking-tight">
+                  {formatCurrency(total)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1588,15 +1667,25 @@ const PosScreen: React.FC = () => {
           <button
             onClick={handleCheckout}
             disabled={cartItems.length === 0 || isProcessing}
-            className="w-full py-3.5 bg-primary hover:bg-primary-hover disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl font-bold text-base transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-emerald-600/20 hover:shadow-xl hover:shadow-emerald-600/30 active:scale-[0.99] flex items-center justify-between cursor-pointer disabled:cursor-not-allowed disabled:shadow-none"
           >
             {isProcessing ? (
-              <span>{language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}</span>
+              <div className="w-full flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>{language === 'ar' ? 'جاري تسجيل الفاتورة والدفع...' : 'Processing Sale...'}</span>
+              </div>
             ) : (
               <>
-                <Check className="w-5 h-5" />
-                <span>{language === 'ar' ? 'إتمام البيع والدفع' : 'Complete Sale & Pay'}</span>
-                <span className="opacity-90 text-sm font-normal">({formatCurrency(total)})</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <span>{language === 'ar' ? 'إتمام البيع والدفع' : 'Complete Sale & Pay'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-black text-base">{formatCurrency(total)}</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-white/90">F10</span>
+                </div>
               </>
             )}
           </button>
@@ -1606,19 +1695,19 @@ const PosScreen: React.FC = () => {
 
       {/* Mobile floating quick checkout bar when viewing catalog */}
       {cartItems.length > 0 && mobileTab === 'catalog' && (
-        <div className="xl:hidden fixed bottom-20 left-3 right-3 z-40 animate-in slide-in-from-bottom-3 duration-200">
+        <div className="xl:hidden fixed bottom-4 left-3 right-3 z-40 animate-in slide-in-from-bottom-3 duration-200">
           <button
             onClick={() => setMobileTab('cart')}
             className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3.5 px-4 rounded-2xl shadow-2xl flex items-center justify-between font-bold text-xs sm:text-sm border border-white/10"
           >
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">
+              <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">
                 {cartItems.reduce((acc, it) => acc + it.quantity, 0)}
               </span>
-              <span>{language === 'ar' ? 'سلة الطلب' : 'Active Order'}</span>
+              <span>{language === 'ar' ? 'سلة الطلب الحالي' : 'Active Order'}</span>
             </div>
-            <div className="flex items-center gap-2 font-black text-primary">
-              <span className="text-sm">{formatCurrency(total)}</span>
+            <div className="flex items-center gap-2 font-black text-amber-400 dark:text-amber-600">
+              <span className="text-sm font-mono">{formatCurrency(total)}</span>
               <ArrowRight className="w-4 h-4 rtl:rotate-180 text-white dark:text-slate-900" />
             </div>
           </button>

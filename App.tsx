@@ -3,7 +3,6 @@ import { Analytics } from '@vercel/analytics/react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MobileSidebar from './components/layout/MobileSidebar';
-import BottomNav from './components/layout/BottomNav';
 import DashboardScreen from './screens/DashboardScreen';
 import PosScreen from './screens/PosScreen';
 import OrdersScreen from './screens/SalesScreen';
@@ -318,12 +317,7 @@ const App: React.FC = () => {
       <div className="flex h-[100dvh] min-h-[100dvh] text-foreground font-sans relative overflow-hidden">
         <MobileSidebar isMobileMenuOpen={isMobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
         <Sidebar />
-        <div 
-          className="flex-1 flex flex-col overflow-hidden relative z-10 md:pb-0"
-          style={{
-            paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))'
-          }}
-        >
+        <div className="flex-1 flex flex-col overflow-hidden relative z-10">
           <Header />
           {availableUpdate && (
             <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 px-4 py-2.5 flex items-center justify-between gap-3 text-xs font-bold shadow-md relative z-40 border-b border-amber-400 animate-slide-in-top">
@@ -375,12 +369,11 @@ const App: React.FC = () => {
             </div>
           </main>
         </div>
-        <BottomNav />
       </div>
 
       {/* Floating Real-time Toast Alerts */}
       <div 
-        className="fixed bottom-20 sm:bottom-6 right-3 left-3 sm:left-auto sm:right-6 z-[80] flex flex-col gap-2.5 max-w-sm pointer-events-none"
+        className="fixed bottom-6 right-3 left-3 sm:left-auto sm:right-6 z-[80] flex flex-col gap-2.5 max-w-sm pointer-events-none"
       >
         {toasts.map(toast => (
           <div 

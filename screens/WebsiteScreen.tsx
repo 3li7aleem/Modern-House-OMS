@@ -30,7 +30,7 @@ const Toast: React.FC<{ message: string; onClose: () => void }> = ({ message, on
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 50, scale: 0.9 }}
-      className="fixed bottom-24 right-6 bg-amber-500 text-slate-950 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs z-50 flex items-center gap-2 border border-amber-400"
+      className="fixed bottom-6 right-6 bg-amber-500 text-slate-950 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs z-50 flex items-center gap-2 border border-amber-400"
     >
       <CheckCircle2 className="w-4 h-4 text-slate-950" />
       <span>{message}</span>
