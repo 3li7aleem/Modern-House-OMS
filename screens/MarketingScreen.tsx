@@ -395,7 +395,7 @@ const MarketingScreen: React.FC = () => {
             </div>
 
             {/* Quick KPI Stat Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
                         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -405,7 +405,7 @@ const MarketingScreen: React.FC = () => {
                             {allTemplates.length} {isAr ? 'قالب متاح' : 'Templates'}
                         </h4>
                         <p className="text-[11px] text-slate-400">
-                            {isAr ? 'طلبات، عروض، ومتابعة عملاء' : 'Orders, promos, and care'}
+                            {isAr ? 'أجهزة Built-in، أحواض، وطلبات' : 'Built-in, sinks & orders'}
                         </p>
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
@@ -446,6 +446,26 @@ const MarketingScreen: React.FC = () => {
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <Users className="w-5 h-5" />
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                {isAr ? 'بروتوكول MCP الذكي' : 'WhatsApp MCP'}
+                            </p>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                            {isAr ? 'خادم التحكم الذاتي' : 'Automation Server'}
+                        </h4>
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                            {isAr ? 'متصل وجاهز للذكاء الاصطناعي' : 'Connected & Ready'}
+                        </p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-amber-500" />
                     </div>
                 </div>
             </div>

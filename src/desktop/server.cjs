@@ -240,7 +240,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
         '<head>' +
           '<meta charset="utf-8">' +
           '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-          '<title>فاتورة ضريبية رسمية - ' + order.orderNumber + ' | مودرن هاوس</title>' +
+          '<title>فاتورة مبيعات - ' + order.orderNumber + ' | مودرن هاوس للتجارة</title>' +
           '<style>' +
             '* { box-sizing: border-box; margin: 0; padding: 0; }' +
             'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f8fafc; color: #0f172a; padding: 16px; }' +
@@ -268,9 +268,9 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
         '<body>' +
           '<div class="container">' +
             '<div class="header">' +
-              '<div class="badge">✓ فاتورة ضريبية رسمية موثقة</div>' +
-              '<div class="title">مؤسسة مودرن هاوس للتجارة</div>' +
-              '<div class="subtitle">س.ت: 147987-2 • الرقم الضريبي VAT: 220000000000002 • مملكة البحرين</div>' +
+              '<div class="badge">✓ فاتورة مبيعات موثقة</div>' +
+              '<div class="title">مودرن هاوس للتجارة</div>' +
+              '<div class="subtitle">س.ت: 147987-2 • هاتف: 35965477 - 77905477 • مملكة البحرين</div>' +
             '</div>' +
             '<div class="info-grid">' +
               '<div class="info-box">' +
@@ -305,8 +305,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
             '</table>' +
             '<div class="totals">' +
               '<div class="totals-table">' +
-                '<div class="totals-row"><span>المبلغ الخاضع للضريبة:</span><span style="font-family:monospace;font-weight:bold;">' + subtotal + ' BHD</span></div>' +
-                (vatTotal > 0 ? '<div class="totals-row"><span>ضريبة القيمة المضافة (10%):</span><span style="font-family:monospace;font-weight:bold;">' + vatTotal.toFixed(2) + ' BHD</span></div>' : '') +
+                (order.discount ? '<div class="totals-row"><span>الخصم المطبق:</span><span style="font-family:monospace;font-weight:bold;">' + Number(order.discount).toFixed(2) + ' BHD</span></div>' : '') +
                 '<div class="totals-row grand-total"><span>المبلغ الإجمالي المستحق:</span><span style="font-family:monospace;">' + grandTotal + ' BHD</span></div>' +
               '</div>' +
             '</div>' +

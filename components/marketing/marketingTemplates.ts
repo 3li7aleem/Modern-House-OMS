@@ -71,17 +71,17 @@ export const BUILTIN_MARKETING_TEMPLATES: MarketingTemplate[] = [
         tags: ['عرض_سعر', 'تسعيرة', 'صلاحية', 'تجهيز']
     },
     {
-        id: 'tax_invoice_sent',
+        id: 'sales_invoice_sent',
         category: 'orders',
-        nameAr: 'إشعار الفاتورة الضريبية وتأكيد السداد',
-        nameEn: 'Tax Invoice & Payment Confirmation',
-        descriptionAr: 'إرسال تفاصيل الفاتورة الضريبية ومبلغها الإجمالي ورقم المعاملة للعميل',
-        descriptionEn: 'Send tax invoice details, total paid, and transaction reference',
-        badgeAr: 'فاتورة ضريبية',
-        badgeEn: 'Tax Invoice',
-        contentAr: 'عزيزنا [الاسم]، نشكرك على تسوقك في [المتجر]! تم إصدار فاتورتك الضريبية رقم: [رقم_الطلب] بمبلغ إجمالي: [المبلغ] دينار مسددة بالكامل. مرفق تفاصيل طلبك ونسعد دائماً بخدمتك ونتمنى لك يوماً سعيداً! 🧾🤍',
-        contentEn: 'Dear [الاسم], thank you for your business with Modern House! Your tax invoice #[رقم_الطلب] has been issued for total of [المبلغ] BHD (Paid). We appreciate your patronage and wish you a great day! 🧾🤍',
-        tags: ['فاتورة', 'ضريبة', 'سداد', 'إيصال']
+        nameAr: 'إشعار فاتورة المبيعات وتأكيد السداد',
+        nameEn: 'Sales Invoice & Payment Confirmation',
+        descriptionAr: 'إرسال تفاصيل فاتورة المبيعات ومبلغها الإجمالي ورابطها السحابي للعميل',
+        descriptionEn: 'Send sales invoice details, total paid, and digital link to customer',
+        badgeAr: 'فاتورة مبيعات',
+        badgeEn: 'Sales Invoice',
+        contentAr: 'عزيزنا [الاسم]، نشكرك على تسوقك في [المتجر]! تم إصدار فاتورة مبيعاتك رقم: [رقم_الطلب] بمبلغ إجمالي: [المبلغ] دينار مسددة بالكامل. مرفق تفاصيل طلبك ورابط الفاتورة السحابية، ونسعد دائماً بخدمتك ونتمنى لك يوماً سعيداً! 🧾🤍',
+        contentEn: 'Dear [الاسم], thank you for your business with Modern House! Your sales invoice #[رقم_الطلب] has been issued for total of [المبلغ] BHD (Paid). Digital link attached. We appreciate your patronage and wish you a great day! 🧾🤍',
+        tags: ['فاتورة', 'مبيعات', 'سداد', 'إيصال', 'رابط']
     },
     {
         id: 'payment_due_reminder',
@@ -333,6 +333,32 @@ export const BUILTIN_MARKETING_TEMPLATES: MarketingTemplate[] = [
         contentAr: 'جدد مطبخك بلمسة عصرية [الاسم] ✨ تشكيلة راقية من أحواض الجرانيت المقاومة للخدش والحرارة مع خلاطات مياه ذكية متعددة الاستخدامات بخصم خاص 20% هذا الأسبوع في [المتجر]. نتشرف بزيارتكم! 🚰🔥',
         contentEn: 'Upgrade your kitchen [الاسم] ✨ Luxury scratch-resistant granite sinks and multifunctional smart mixers at 20% off this week at Modern House! 🚰🔥',
         tags: ['أحواض', 'جرانيت', 'خلاط', 'ذكي']
+    },
+    {
+        id: 'builtin_appliances_special',
+        category: 'promotions',
+        nameAr: 'عروض أجهزة Built-in الإيطالية والأوروبية',
+        nameEn: 'Built-in Appliances European Collection',
+        descriptionAr: 'عروض حصرية على أفران، شفاطات، ومواقد Built-in مع الضمان المعتمد',
+        descriptionEn: 'Exclusive offers on built-in ovens, hoods, and ceramic hobs with warranty',
+        badgeAr: 'أجهزة Built-in',
+        badgeEn: 'Built-in Promo',
+        contentAr: 'أهلاً بك [الاسم] ✨ ميز مطبخك بأحدث أجهزة الـ Built-in المتطورة (أفران بلت إن، مسطحات سيراميك وغاز، وشفاطات ديكورية) من [المتجر] بأسعار حصرية مع ضمان شامل وخدمة تركيب معتمدة. تفضل بزيارة فرعنا بسوق واقف أو تواصل معنا للاستفسار! 🔥🍳',
+        contentEn: 'Hello [الاسم] ✨ Upgrade your kitchen with the latest Built-in appliances (built-in ovens, hobs & designer hoods) from Modern House with official warranty and certified installation! 🔥🍳',
+        tags: ['بلت_إن', 'أجهزة_مطبخ', 'أفران', 'شفاطات', 'ضمان']
+    },
+    {
+        id: 'stainless_sinks_accessories',
+        category: 'promotions',
+        nameAr: 'أحواض استانلس ستيل نانو وإكسسوارات المطابخ',
+        nameEn: 'Stainless Steel Sinks & Kitchen Accessories',
+        descriptionAr: 'خصومات مميزة على أحواض استانلس ستيل 304 بتقنية النانو وإكسسوارات المطابخ',
+        descriptionEn: 'Premium stainless steel 304 nano sinks and kitchen organizer accessories',
+        badgeAr: 'أحواض استانلس ستيل',
+        badgeEn: 'Stainless Sinks',
+        contentAr: 'مرحباً [الاسم] 🚰 اكتشف تشكيلة [المتجر] الحصرية من أحواض المطابخ استانلس ستيل المقاومة للخدش بتقنية النانو مع منظمات وإكسسوارات المطابخ الذكية بأسعار تفضيلية وجودة تدوم لسنوات. نسعد بخدمتك دائماً! ✨🏡',
+        contentEn: 'Hello [الاسم] 🚰 Discover Modern House exclusive collection of premium nano stainless steel kitchen sinks and organizer accessories at special prices! ✨🏡',
+        tags: ['أحواض', 'استانلس_ستيل', 'نانو', 'إكسسوارات', 'مطابخ']
     },
     {
         id: 'weekend_flash_sale',
