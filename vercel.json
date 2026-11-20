@@ -1,20 +1,15 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/invoice/:id*",
-      "destination": "/api/invoice/:id*"
+      "source": "/invoice/(.*)",
+      "destination": "/api/invoice?id=$1"
     },
     {
-      "source": "/download/:file*",
-      "destination": "/api/download/:file*"
+      "source": "/download/(.*)",
+      "destination": "/api/download?file=$1"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/((?!api/|download/|invoice/).*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
