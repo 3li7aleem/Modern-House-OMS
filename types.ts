@@ -140,6 +140,7 @@ export interface OrderItem {
   price: number;
   vatPercent?: number;
   vatAmount?: number;
+  serialNumber?: string;
 }
 
 export interface Order {
@@ -151,7 +152,12 @@ export interface Order {
   subtotal: number;
   discount: number;
   total: number;
-  paymentMethod: 'Cash' | 'Card' | 'BenefitPay';
+  paymentMethod: 'Cash' | 'Card' | 'BenefitPay' | 'Split';
+  splitDetails?: {
+    cashAmount: number;
+    electronicAmount: number;
+    electronicMethod: 'BenefitPay' | 'Card';
+  };
   benefitPayRef?: string;
   employeeId: string;
   deliveryFee?: number;

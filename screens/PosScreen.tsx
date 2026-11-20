@@ -10,6 +10,8 @@ import PosHeldOrdersModal, { HeldOrder } from '../components/pos/PosHeldOrdersMo
 import PosShiftSummaryModal from '../components/pos/PosShiftSummaryModal';
 import PosQuickCustomItemModal from '../components/pos/PosQuickCustomItemModal';
 import PosShortcutsModal from '../components/pos/PosShortcutsModal';
+import PosBenefitQrModal from '../components/pos/PosBenefitQrModal';
+import PosKitchenBundlesModal from '../components/pos/PosKitchenBundlesModal';
 import {
   playScanBeep,
   playSuccessChime,
@@ -44,6 +46,9 @@ import {
   Star,
   ArrowRight,
   ChevronLeft,
+  Layers,
+  QrCode,
+  Package,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { StorageImage } from '../components/StorageImage';
@@ -77,9 +82,13 @@ const PosScreen: React.FC = () => {
   const [vatPercent, setVatPercent] = useState<number>(10);
 
   // Payments & Cash Tender
-  const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Card' | 'BenefitPay'>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Card' | 'BenefitPay' | 'Split'>('Cash');
   const [benefitPayRefPos, setBenefitPayRefPos] = useState<string>('');
   const [cashTendered, setCashTendered] = useState<string>('');
+  const [splitCashAmount, setSplitCashAmount] = useState<string>('');
+  const [splitElectronicMethod, setSplitElectronicMethod] = useState<'BenefitPay' | 'Card'>('BenefitPay');
+  const [showBenefitQrModal, setShowBenefitQrModal] = useState<boolean>(false);
+  const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
 
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -562,6 +571,14 @@ const PosScreen: React.FC = () => {
       paymentMethod,
       employeeId,
       ...(paymentMethod === 'BenefitPay' ? { benefitPayRef: benefitPayRefPos.trim() } : {}),
+      ...(paymentMethod === 'Split' ? {
+        splitDetails: {
+          cashAmount: parseFloat(splitCashAmount) || 0,
+          electronicAmount: Math.max(0, total - (parseFloat(splitCashAmount) || 0)),
+          electronicMethod: splitElectronicMethod,
+        },
+        benefitPayRef: splitElectronicMethod === 'BenefitPay' && benefitPayRefPos ? benefitPayRefPos.trim() : undefined,
+      } : {}),
     };
 
     if (deliveryOption === 'charge') {
@@ -741,12 +758,24 @@ const PosScreen: React.FC = () => {
             {/* Daily Shift Summary (Z-Report) */}
             <button
               onClick={() => setIsShiftSummaryModalOpen(true)}
-              className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               title={language === 'ar' ? 'ملخص مبيعات اليوم والوردية' : 'Daily Shift Summary'}
             >
               <History className="w-3.5 h-3.5" />
               <span className="hidden md:inline">
                 {language === 'ar' ? 'الوردية' : 'Shift'}
+              </span>
+            </button>
+
+            {/* Kitchen Bundles & Offers Modal */}
+            <button
+              onClick={() => setIsBundlesModalOpen(true)}
+              className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-amber-500/30"
+              title={language === 'ar' ? 'باقات وعروض أطقم المطابخ المعتمدة' : 'Kitchen Packages & Offers'}
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">
+                {language === 'ar' ? 'باقات المطابخ' : 'Bundles'}
               </span>
             </button>
 
@@ -1320,11 +1349,12 @@ const PosScreen: React.FC = () => {
             <span className="font-semibold text-text-secondary dark:text-dark-text-secondary block">
               {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
             </span>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5">
               {[
                 { id: 'Cash', label: language === 'ar' ? 'نقد (كاش)' : 'Cash', icon: Banknote },
-                { id: 'Card', label: language === 'ar' ? 'بطاقة بنكية' : 'Card', icon: CreditCard },
+                { id: 'Card', label: language === 'ar' ? 'بطاقة' : 'Card', icon: CreditCard },
                 { id: 'BenefitPay', label: 'BenefitPay', icon: Banknote },
+                { id: 'Split', label: language === 'ar' ? 'دفع مزدوج' : 'Split', icon: Layers },
               ].map(method => {
                 const Icon = method.icon;
                 const isSelected = paymentMethod === method.id;
@@ -1333,26 +1363,36 @@ const PosScreen: React.FC = () => {
                     key={method.id}
                     type="button"
                     onClick={() => setPaymentMethod(method.id as any)}
-                    className={`py-2 px-1.5 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`py-2 px-1 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-primary text-white border-primary shadow-xs'
                         : 'bg-white dark:bg-gray-800 border-border dark:border-dark-border text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-750'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
-                    <span className="text-[11px] truncate">{method.label}</span>
+                    <span className="text-[10px] truncate">{method.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* BenefitPay Reference Number */}
+          {/* BenefitPay Reference Number & QR Button */}
           {paymentMethod === 'BenefitPay' && (
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-text-secondary dark:text-dark-text-secondary">
-                {language === 'ar' ? 'رقم عملية بنفت بي المرجعي *' : 'BenefitPay Reference No. *'}
-              </label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-text-secondary dark:text-dark-text-secondary">
+                  {language === 'ar' ? 'رقم عملية بنفت بي المرجعي *' : 'BenefitPay Reference No. *'}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowBenefitQrModal(true)}
+                  className="text-rose-500 hover:text-rose-600 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <QrCode className="w-3 h-3" />
+                  <span>{language === 'ar' ? 'عرض رمز QR' : 'Show QR'}</span>
+                </button>
+              </div>
               <input
                 type="text"
                 required
@@ -1361,6 +1401,78 @@ const PosScreen: React.FC = () => {
                 placeholder="e.g. 987654321"
                 className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-border dark:border-dark-border rounded-xl text-xs focus:ring-1 focus:ring-primary outline-none font-mono"
               />
+            </div>
+          )}
+
+          {/* Split Payment Details */}
+          {paymentMethod === 'Split' && (
+            <div className="p-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                <span>{language === 'ar' ? 'تفاصيل الدفع المزدوج' : 'Split Payment'}</span>
+                <span className="font-mono text-primary font-black">{formatCurrency(total)}</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                    {language === 'ar' ? 'المبلغ نقداً (Cash)' : 'Cash Amount'}
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={splitCashAmount}
+                    onChange={e => setSplitCashAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                    {language === 'ar' ? 'طريقة سداد المتبقي' : 'Remaining Method'}
+                  </label>
+                  <select
+                    value={splitElectronicMethod}
+                    onChange={e => setSplitElectronicMethod(e.target.value as any)}
+                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold outline-none cursor-pointer"
+                  >
+                    <option value="BenefitPay">BenefitPay</option>
+                    <option value="Card">{language === 'ar' ? 'بطاقة بنكية' : 'Card'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 font-bold">{language === 'ar' ? 'المتبقي للسداد الإلكتروني:' : 'Electronic Remaining:'}</span>
+                <span className="font-black font-mono text-rose-600 dark:text-rose-400">
+                  {formatCurrency(Math.max(0, total - (parseFloat(splitCashAmount) || 0)))}
+                </span>
+              </div>
+
+              {splitElectronicMethod === 'BenefitPay' && (
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-slate-500">
+                      {language === 'ar' ? 'رقم عملية بنفت بي' : 'BenefitPay Ref'}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowBenefitQrModal(true)}
+                      className="text-rose-500 hover:text-rose-600 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <QrCode className="w-3 h-3" />
+                      <span>{language === 'ar' ? 'رمز QR' : 'QR Code'}</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={benefitPayRefPos}
+                    onChange={e => setBenefitPayRefPos(e.target.value)}
+                    placeholder="Ref #"
+                    className="w-full px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono outline-none"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -1594,6 +1706,41 @@ const PosScreen: React.FC = () => {
       {/* 8. Keyboard Shortcuts Modal */}
       {isShortcutsModalOpen && (
         <PosShortcutsModal onClose={() => setIsShortcutsModalOpen(false)} />
+      )}
+
+      {/* 9. BenefitPay QR Code Modal */}
+      {showBenefitQrModal && (
+        <PosBenefitQrModal
+          amount={paymentMethod === 'Split' ? Math.max(0, total - (parseFloat(splitCashAmount) || 0)) : total}
+          formatCurrency={formatCurrency}
+          isAr={language === 'ar'}
+          onConfirm={(ref) => {
+            setBenefitPayRefPos(ref);
+            setShowBenefitQrModal(false);
+          }}
+          onClose={() => setShowBenefitQrModal(false)}
+        />
+      )}
+
+      {/* 10. Kitchen Bundles Modal */}
+      {isBundlesModalOpen && (
+        <PosKitchenBundlesModal
+          products={products}
+          formatCurrency={formatCurrency}
+          isAr={language === 'ar'}
+          onAddBundleToCart={(itemsToAdd, discount) => {
+            itemsToAdd.forEach(it => {
+              for (let i = 0; i < it.quantity; i++) {
+                addToCart(it.product);
+              }
+            });
+            if (discount > 0) {
+              setDiscountType('fixed');
+              setDiscountValue(prev => prev + discount);
+            }
+          }}
+          onClose={() => setIsBundlesModalOpen(false)}
+        />
       )}
 
       {/* Dynamic Toast Feedback */}

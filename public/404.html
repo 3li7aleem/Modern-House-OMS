@@ -19,6 +19,14 @@
           return;
         }
 
+        // Check if this was a tracking route like /track/ORD-1001
+        var trackMatch = path.match(/\/(?:track|tracking)\/([^/?#]+)/i);
+        if (trackMatch && trackMatch[1]) {
+          var trackId = decodeURIComponent(trackMatch[1].trim());
+          window.location.replace('/?track=' + encodeURIComponent(trackId));
+          return;
+        }
+
         // If search already contains invoice
         if (search.indexOf('invoice=') !== -1) {
           window.location.replace('/' + search);

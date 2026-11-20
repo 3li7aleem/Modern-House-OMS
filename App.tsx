@@ -17,6 +17,7 @@ import PurchaseOrdersScreen from './screens/PurchaseOrdersScreen';
 import MaintenanceScreen from './screens/MaintenanceScreen';
 import AuthScreen from './screens/AuthScreen';
 import { PublicInvoiceScreen } from './components/public/PublicInvoiceScreen';
+import { PublicTrackingScreen } from './components/public/PublicTrackingScreen';
 import RequestsScreen from './screens/RequestsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ReportsScreen from './screens/ReportsScreen';
@@ -215,6 +216,16 @@ const App: React.FC = () => {
   );
   if (isInvoiceRoute) {
     return <PublicInvoiceScreen />;
+  }
+
+  // Public Order Tracking View on Vercel
+  const isTrackingRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/track/') ||
+    window.location.search.includes('track=') ||
+    window.location.hash.includes('track')
+  );
+  if (isTrackingRoute) {
+    return <PublicTrackingScreen />;
   }
 
   // --- Require Login to Access OMS ---

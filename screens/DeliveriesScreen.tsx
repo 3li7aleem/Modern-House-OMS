@@ -257,6 +257,7 @@ const DeliveriesScreen: React.FC = () => {
     const orderNumber = getOrderNumber(delivery.orderId);
     const driver = getDriver(delivery.driverId);
     const invoiceUrl = getInvoiceLink(orderNumber);
+    const trackingUrl = `https://modern-house-oms.vercel.app/?track=${encodeURIComponent(orderNumber)}`;
 
     let msg = '';
     if (delivery.status === 'Delivered') {
@@ -265,12 +266,12 @@ const DeliveriesScreen: React.FC = () => {
         : `Hello ${customer.name},\n*Modern House for Trading* informs you that your order *#${orderNumber}* has been delivered successfully! 📦✨\n\n📄 *Verified Digital Invoice:* ${invoiceUrl}\n\nThank you for choosing Modern House!\nSouq Waqif, Bahrain | Tel: 35965477 - 77905477`;
     } else if (delivery.status === 'Out for Delivery') {
       msg = isAr
-        ? `مرحباً ${customer.name}،\nطلبك رقم *${orderNumber}* في الطريق إليك الآن مع المندوب (${driver?.name || 'سائق التوصيل'}${driver?.phone ? ` - ${driver.phone}` : ''}). 🚚\nالعنوان: ${delivery.address}\n\n📄 *رابط الفاتورة المعتمدة:* ${invoiceUrl}\n\nمودرن هاوس للتجارة — هاتف: 35965477 - 77905477`
-        : `Hello ${customer.name},\nYour order *#${orderNumber}* is out for delivery with courier (${driver?.name || 'Driver'}${driver?.phone ? ` - ${driver.phone}` : ''}). 🚚\nAddress: ${delivery.address}\n\n📄 *Digital Invoice:* ${invoiceUrl}\n\nModern House for Trading | Tel: 35965477 - 77905477`;
+        ? `مرحباً ${customer.name}،\nطلبك رقم *${orderNumber}* في الطريق إليك الآن مع المندوب (${driver?.name || 'سائق التوصيل'}${driver?.phone ? ` - ${driver.phone}` : ''}). 🚚\nالعنوان: ${delivery.address}\n\n📍 *تتبع مسار الشحنة مباشرة:* ${trackingUrl}\n📄 *رابط الفاتورة المعتمدة:* ${invoiceUrl}\n\nمودرن هاوس للتجارة — هاتف: 35965477 - 77905477`
+        : `Hello ${customer.name},\nYour order *#${orderNumber}* is out for delivery with courier (${driver?.name || 'Driver'}${driver?.phone ? ` - ${driver.phone}` : ''}). 🚚\nAddress: ${delivery.address}\n\n📍 *Live Order Tracking:* ${trackingUrl}\n📄 *Digital Invoice:* ${invoiceUrl}\n\nModern House for Trading | Tel: 35965477 - 77905477`;
     } else {
       msg = isAr
-        ? `مرحباً ${customer.name}،\nلقد تم تأكيد وتجهيز طلبك رقم *${orderNumber}* للتوصيل إلى: ${delivery.address}.\n\n📄 *رابط الفاتورة المعتمدة:* ${invoiceUrl}\n\nمودرن هاوس للتجارة — هاتف: 35965477 - 77905477`
-        : `Hello ${customer.name},\nYour order *#${orderNumber}* is scheduled for delivery to: ${delivery.address}.\n\n📄 *Digital Invoice:* ${invoiceUrl}\n\nModern House for Trading | Tel: 35965477 - 77905477`;
+        ? `مرحباً ${customer.name}،\nلقد تم تأكيد وتجهيز طلبك رقم *${orderNumber}* للتوصيل إلى: ${delivery.address}.\n\n📍 *تتبع حالة الطلب:* ${trackingUrl}\n📄 *رابط الفاتورة المعتمدة:* ${invoiceUrl}\n\nمودرن هاوس للتجارة — هاتف: 35965477 - 77905477`
+        : `Hello ${customer.name},\nYour order *#${orderNumber}* is scheduled for delivery to: ${delivery.address}.\n\n📍 *Order Tracking:* ${trackingUrl}\n📄 *Digital Invoice:* ${invoiceUrl}\n\nModern House for Trading | Tel: 35965477 - 77905477`;
     }
 
     const phone = customer.phone.replace(/\D/g, '');
