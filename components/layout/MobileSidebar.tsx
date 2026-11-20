@@ -45,7 +45,6 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isMobileMenuOpen, toggleM
   }, [isMobileMenuOpen, toggleMobileMenu]);
 
   const userPermissions = currentUser?.permissions || [];
-  const visibleNavItems = NAV_ITEMS.filter(item => userPermissions.includes(item.screen));
 
   const isRtl = language === 'ar';
 
