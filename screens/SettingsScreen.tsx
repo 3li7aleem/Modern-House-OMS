@@ -34,8 +34,17 @@ import {
   Play,
   Square,
   MessageSquareQuote,
-  Shield
+  Shield,
+  Send,
+  Bot,
+  Zap,
+  Radio,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  MessageCircle
 } from 'lucide-react';
+import { sendWhatsAppMessage, cleanPhoneForWhatsApp, WhatsAppConfig, DEFAULT_WHATSAPP_CONFIG } from '../lib/whatsappService';
 
 type PrintListItem = {
     product: Product;
@@ -48,14 +57,23 @@ const SettingsScreen: React.FC = () => {
       settings, updateLogoUrl, updateHeroImageUrl, updateFooterText, updateAccentColor, updateInvoiceSettings,
       updateDeliveryNoteNotice, updateDeliveryNoteContact, updateDeliveryNoteThankYou,
       voiceGreetingEnabled, updateVoiceGreetingEnabled,
-      entranceSupplicationEnabled, updateEntranceSupplicationEnabled
+      entranceSupplicationEnabled, updateEntranceSupplicationEnabled,
+      whatsAppSettings, updateWhatsAppSettings
   } = useSettings();
   const { orders, deliveries, drivers, products, customers, expenses, suppliers, users, purchaseOrders, notifications, requests } = useAppContext();
   const { language } = useTranslation();
   const isAr = language === 'ar';
-  const [activeTab, setActiveTab] = useState<'invoice' | 'delivery' | 'barcode_printing' | 'data_management' | 'app_download' | 'voice_audio'>('voice_audio');
+  const [activeTab, setActiveTab] = useState<'invoice' | 'delivery' | 'barcode_printing' | 'data_management' | 'app_download' | 'voice_audio' | 'whatsapp_mcp'>('whatsapp_mcp');
   const [isDeletingData, setIsDeletingData] = useState(false);
   const [isPlayingVoiceTest, setIsPlayingVoiceTest] = useState(false);
+
+  // WhatsApp & MCP States
+  const [testPhone, setTestPhone] = useState('35965477');
+  const [testMessage, setTestMessage] = useState('مرحباً بكم من مودرن هاوس للتجارة! هذه رسالة فحص تجريبية للربط الذكي.');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testStatus, setTestStatus] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [showApiToken, setShowApiToken] = useState(false);
+  const [copiedMcpConfig, setCopiedMcpConfig] = useState(false);
 
   const handlePlayVoiceTest = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -74,6 +92,36 @@ const SettingsScreen: React.FC = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       setIsPlayingVoiceTest(false);
+    }
+  };
+
+  const handleSendTestMessage = async () => {
+    if (!testPhone.trim()) {
+      setTestStatus({ type: 'error', text: isAr ? 'يرجى إدخال رقم الهاتف أولاً' : 'Please enter a phone number' });
+      return;
+    }
+    setIsSendingTest(true);
+    setTestStatus(null);
+    try {
+      const res = await sendWhatsAppMessage({
+        phone: testPhone,
+        message: testMessage,
+        config: whatsAppSettings,
+        fallbackToWaMe: true
+      });
+      if (res.success) {
+        if (res.method === 'api') {
+          setTestStatus({ type: 'success', text: isAr ? 'تم إرسال الرسالة بنجاح عبر API المزود السحابي! 🚀' : 'Message sent successfully via Cloud API!' });
+        } else {
+          setTestStatus({ type: 'info', text: isAr ? 'تم إنشاء وفتح رابط WhatsApp المباشر بنجاح! ✅' : 'WhatsApp direct link generated and opened!' });
+        }
+      } else {
+        setTestStatus({ type: 'error', text: res.error || (isAr ? 'فشل الإرسال عبر API' : 'Failed to send via API') });
+      }
+    } catch (e: any) {
+      setTestStatus({ type: 'error', text: e.message || 'Error occurred' });
+    } finally {
+      setIsSendingTest(false);
     }
   };
 
@@ -269,6 +317,13 @@ const SettingsScreen: React.FC = () => {
               </button>
               <button onClick={() => setActiveTab('barcode_printing')} className={`${activeTab === 'barcode_printing' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                   {t('settings.qr_code_printing')}
+              </button>
+              <button 
+                onClick={() => setActiveTab('whatsapp_mcp')} 
+                className={`${activeTab === 'whatsapp_mcp' ? 'border-primary text-primary font-bold' : 'border-transparent text-text-secondary hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1.5`}
+              >
+                <MessageSquareQuote className="w-4 h-4 text-emerald-500" />
+                <span>{isAr ? 'واتساب وربط الذكاء الاصطناعي (MCP & API)' : 'WhatsApp & MCP Settings'}</span>
               </button>
               <button 
                 onClick={() => setActiveTab('app_download')} 
@@ -1085,6 +1140,428 @@ const SettingsScreen: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'whatsapp_mcp' && (
+        <div className="mt-8 space-y-8 animate-fade-in">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-3xl p-6 md:p-8 border border-emerald-500/30 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-2xl shadow-inner">
+                <MessageSquareQuote className="w-8 h-8" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-xl font-black text-white">
+                    {isAr ? 'إعدادات واتساب وربط الذكاء الاصطناعي (MCP & API)' : 'WhatsApp Gateway & MCP Settings'}
+                  </h4>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/25 text-emerald-300 border border-emerald-500/40">
+                    {whatsAppSettings.provider.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  {isAr 
+                    ? 'تحكم ببوابة إرسال الفواتير ورسائل التتبع السحابية وربط خادم الذكاء الاصطناعي MCP لمودرن هاوس'
+                    : 'Manage WhatsApp dispatch gateways, automated order tracking, and AI MCP server integration'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="px-3 py-1.5 rounded-xl bg-slate-950/70 border border-emerald-500/30 text-emerald-400 text-xs font-mono flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>MCP: whatsapp-marketing</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* Left Column (7 cols): Gateway Providers & Credentials */}
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* Provider Selection Card */}
+              <div className="bg-card dark:bg-dark-card rounded-3xl p-6 border border-border dark:border-dark-border shadow-sm space-y-4">
+                <h5 className="text-base font-bold text-text-primary dark:text-dark-text-primary flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-emerald-500" />
+                  <span>{isAr ? 'اختيار بوابة ومزود خدمة واتساب' : 'Select WhatsApp Gateway'}</span>
+                </h5>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary">
+                  {isAr 
+                    ? 'اختر طريقة الإرسال المناسبة لنشاطك (رابط مباشر مجاني دون تكلفة، أو إرسال آلي صامت عبر API)' 
+                    : 'Choose your dispatch method (zero-cost direct links or silent background API sending)'}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  
+                  {/* Option 1: Direct wa.me */}
+                  <div 
+                    onClick={() => updateWhatsAppSettings({ provider: 'direct' })}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                      whatsAppSettings.provider === 'direct'
+                        ? 'border-emerald-500 bg-emerald-500/10 shadow-md ring-2 ring-emerald-500/20'
+                        : 'border-border dark:border-dark-border hover:border-emerald-500/50 bg-slate-50/50 dark:bg-slate-900/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-xs text-text-primary dark:text-dark-text-primary flex items-center gap-1.5">
+                        <MessageCircle className="w-4 h-4 text-emerald-500" />
+                        <span>{isAr ? 'رابط مباشر (wa.me)' : 'Direct Link (wa.me)'}</span>
+                      </span>
+                      {whatsAppSettings.provider === 'direct' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    </div>
+                    <p className="text-[11px] text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                      {isAr ? 'مجاني وبدون اشتراك، يفتح تطبيق واتساب أو الويب مباشرة مع نص منسق.' : 'Universal zero-cost option. Opens WhatsApp Web or App with pre-filled text.'}
+                    </p>
+                  </div>
+
+                  {/* Option 2: UltraMsg API */}
+                  <div 
+                    onClick={() => updateWhatsAppSettings({ provider: 'ultramsg' })}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                      whatsAppSettings.provider === 'ultramsg'
+                        ? 'border-emerald-500 bg-emerald-500/10 shadow-md ring-2 ring-emerald-500/20'
+                        : 'border-border dark:border-dark-border hover:border-emerald-500/50 bg-slate-50/50 dark:bg-slate-900/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-xs text-text-primary dark:text-dark-text-primary flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-amber-500" />
+                        <span>UltraMsg Cloud API</span>
+                      </span>
+                      {whatsAppSettings.provider === 'ultramsg' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    </div>
+                    <p className="text-[11px] text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                      {isAr ? 'إرسال آلي وصامت في الخلفية للعميل مباشرة دون مغادرة شاشة الكاشير.' : 'Silent background sending via UltraMsg instance. No manual browser action required.'}
+                    </p>
+                  </div>
+
+                  {/* Option 3: Green API */}
+                  <div 
+                    onClick={() => updateWhatsAppSettings({ provider: 'greenapi' })}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                      whatsAppSettings.provider === 'greenapi'
+                        ? 'border-emerald-500 bg-emerald-500/10 shadow-md ring-2 ring-emerald-500/20'
+                        : 'border-border dark:border-dark-border hover:border-emerald-500/50 bg-slate-50/50 dark:bg-slate-900/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-xs text-text-primary dark:text-dark-text-primary flex items-center gap-1.5">
+                        <Bot className="w-4 h-4 text-blue-500" />
+                        <span>Green API</span>
+                      </span>
+                      {whatsAppSettings.provider === 'greenapi' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    </div>
+                    <p className="text-[11px] text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                      {isAr ? 'بوابة سحابية سريعة بحسابات الأعمال وتدعم إرسال الفواتير والوسائط.' : 'Reliable business gateway supporting automated dispatch and invoice media.'}
+                    </p>
+                  </div>
+
+                  {/* Option 4: WhatsApp Cloud API */}
+                  <div 
+                    onClick={() => updateWhatsAppSettings({ provider: 'meta_cloud' })}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                      whatsAppSettings.provider === 'meta_cloud'
+                        ? 'border-emerald-500 bg-emerald-500/10 shadow-md ring-2 ring-emerald-500/20'
+                        : 'border-border dark:border-dark-border hover:border-emerald-500/50 bg-slate-50/50 dark:bg-slate-900/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-xs text-text-primary dark:text-dark-text-primary flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-purple-500" />
+                        <span>Meta Cloud API</span>
+                      </span>
+                      {whatsAppSettings.provider === 'meta_cloud' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    </div>
+                    <p className="text-[11px] text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                      {isAr ? 'واجهة Meta الرسمية السحابية المعتمدة للمؤسسات الكبرى.' : 'Official Meta Graph Cloud API for verified business numbers.'}
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Credentials & Parameters Card */}
+              <div className="bg-card dark:bg-dark-card rounded-3xl p-6 border border-border dark:border-dark-border shadow-sm space-y-4">
+                <h5 className="text-base font-bold text-text-primary dark:text-dark-text-primary flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span>{isAr ? 'بيانات الاعتماد والربط' : 'Gateway Credentials & Parameters'}</span>
+                </h5>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-text-secondary dark:text-dark-text-secondary mb-1">
+                      {isAr ? 'رقم هاتف المعرض المعتمد (مع فتح خط البحرين +973)' : 'Official Store Sender Phone (+973)'}
+                    </label>
+                    <input 
+                      type="text"
+                      value={whatsAppSettings.senderPhone || '35965477'}
+                      onChange={(e) => updateWhatsAppSettings({ senderPhone: e.target.value })}
+                      placeholder="35965477"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-sm font-mono focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+
+                  {/* UltraMsg Fields */}
+                  {whatsAppSettings.provider === 'ultramsg' && (
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400">إعدادات حساب UltraMsg</span>
+                        <a 
+                          href="https://ultramsg.com" 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-bold"
+                        >
+                          <span>لوحة تحكم UltraMsg</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary dark:text-dark-text-secondary mb-1">Instance ID</label>
+                          <input 
+                            type="text"
+                            value={whatsAppSettings.instanceId || ''}
+                            onChange={(e) => updateWhatsAppSettings({ instanceId: e.target.value })}
+                            placeholder="instance12345"
+                            className="w-full px-3 py-2 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-xs font-mono outline-none focus:ring-2 focus:ring-amber-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary dark:text-dark-text-secondary mb-1">Token</label>
+                          <div className="relative">
+                            <input 
+                              type={showApiToken ? "text" : "password"}
+                              value={whatsAppSettings.token || ''}
+                              onChange={(e) => updateWhatsAppSettings({ token: e.target.value })}
+                              placeholder="xxxxxxxxxx"
+                              className="w-full px-3 py-2 pr-9 rtl:pr-3 rtl:pl-9 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-xs font-mono outline-none focus:ring-2 focus:ring-amber-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowApiToken(!showApiToken)}
+                              className="absolute top-1/2 -translate-y-1/2 right-2.5 rtl:right-auto rtl:left-2.5 text-text-secondary hover:text-text-primary"
+                            >
+                              {showApiToken ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Green API Fields */}
+                  {whatsAppSettings.provider === 'greenapi' && (
+                    <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 space-y-3">
+                      <span className="text-xs font-bold text-blue-700 dark:text-blue-400">إعدادات Green API</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary dark:text-dark-text-secondary mb-1">IdInstance</label>
+                          <input 
+                            type="text"
+                            value={whatsAppSettings.greenIdInstance || ''}
+                            onChange={(e) => updateWhatsAppSettings({ greenIdInstance: e.target.value })}
+                            placeholder="1101xxxxxx"
+                            className="w-full px-3 py-2 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary dark:text-dark-text-secondary mb-1">ApiTokenInstance</label>
+                          <input 
+                            type="password"
+                            value={whatsAppSettings.greenApiToken || ''}
+                            onChange={(e) => updateWhatsAppSettings({ greenApiToken: e.target.value })}
+                            placeholder="token..."
+                            className="w-full px-3 py-2 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Automation Toggles */}
+                  <div className="pt-3 border-t border-border dark:border-dark-border space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <input 
+                        type="checkbox"
+                        checked={whatsAppSettings.autoSendInvoice}
+                        onChange={(e) => updateWhatsAppSettings({ autoSendInvoice: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span className="text-xs font-bold text-text-primary dark:text-dark-text-primary">
+                        {isAr ? 'إرسال الفاتورة الرقمية السحابية تلقائياً للعميل عند إتمام الدفع (POS)' : 'Auto-send digital invoice to customer upon checkout'}
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <input 
+                        type="checkbox"
+                        checked={whatsAppSettings.autoSendTracking}
+                        onChange={(e) => updateWhatsAppSettings({ autoSendTracking: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span className="text-xs font-bold text-text-primary dark:text-dark-text-primary">
+                        {isAr ? 'إرسال رابط التتبع المباشر تلقائياً للعميل عند خروج الشحنة مع المندوب' : 'Auto-send live order tracking link upon delivery dispatch'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Column (5 cols): Test Tool & MCP Server Diagnostics */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              {/* Live Test Diagnostic Tool */}
+              <div className="bg-card dark:bg-dark-card rounded-3xl p-6 border border-border dark:border-dark-border shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-base font-bold text-text-primary dark:text-dark-text-primary flex items-center gap-2">
+                    <Send className="w-4 h-4 text-emerald-500" />
+                    <span>{isAr ? 'أداة الفحص والإرسال التجريبي' : 'Live Test Sender'}</span>
+                  </h5>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    Live Diagnostics
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary dark:text-dark-text-secondary mb-1">
+                      {isAr ? 'رقم الهاتف للاختبار' : 'Recipient Phone Number'}
+                    </label>
+                    <input 
+                      type="text"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      placeholder="35965477"
+                      className="w-full px-3 py-2 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary dark:text-dark-text-secondary mb-1">
+                      {isAr ? 'نص الرسالة الاختبارية' : 'Test Message Body'}
+                    </label>
+                    <textarea 
+                      rows={3}
+                      value={testMessage}
+                      onChange={(e) => setTestMessage(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-border dark:border-dark-border bg-background dark:bg-dark-background text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSendTestMessage}
+                    disabled={isSendingTest}
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isSendingTest ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    <span>{isSendingTest ? (isAr ? 'جارٍ الإرسال...' : 'Sending...') : (isAr ? 'إرسال رسالة اختبارية 🚀' : 'Send Test Message 🚀')}</span>
+                  </button>
+
+                  {testStatus && (
+                    <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                      testStatus.type === 'success' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30' :
+                      testStatus.type === 'info' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30' :
+                      'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30'
+                    }`}>
+                      {testStatus.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      <span>{testStatus.text}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* MCP Server Diagnostics Card */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 border border-emerald-500/30 shadow-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-emerald-400" />
+                    <span className="font-bold text-sm text-emerald-400">خادم MCP للذكاء الاصطناعي</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
+                    JSON-RPC 2.0
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-xs text-slate-300 font-mono">
+                  <div className="flex items-center justify-between py-1 border-b border-slate-800">
+                    <span className="text-slate-400">Server:</span>
+                    <span className="text-white font-bold">whatsapp-marketing</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-slate-800">
+                    <span className="text-slate-400">Database:</span>
+                    <span className="text-amber-400 font-bold">D:/oms/oms.sqlite (SQLite)</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-slate-800">
+                    <span className="text-slate-400">Status:</span>
+                    <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                      Active & Connected
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <span className="text-[11px] font-bold text-slate-400 block mb-2">الأدوات المسجلة في الخادم (MCP Tools):</span>
+                  <div className="space-y-1.5 font-mono text-[11px]">
+                    <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
+                      <span className="text-emerald-300">whatsapp_send_message</span>
+                      <span className="text-[10px] text-slate-400">Direct message</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
+                      <span className="text-emerald-300">whatsapp_send_invoice</span>
+                      <span className="text-[10px] text-slate-400">Itemized invoice link</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
+                      <span className="text-emerald-300">whatsapp_broadcast_campaign</span>
+                      <span className="text-[10px] text-slate-400">Built-in & Sinks Promo</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
+                      <span className="text-emerald-300">whatsapp_list_templates</span>
+                      <span className="text-[10px] text-slate-400">Template catalog</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
+                      <span className="text-emerald-300">whatsapp_list_customers</span>
+                      <span className="text-[10px] text-slate-400">Customer directory</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mcpConfig = {
+                        mcpServers: {
+                          "whatsapp-marketing": {
+                            command: "node",
+                            args: ["c:\\Users\\7aleem\\Desktop\\Modern House OMS\\Modern House OMS Development\\src\\mcp\\whatsapp-mcp-server.cjs"],
+                            env: {
+                              OMS_DATABASE_PATH: "D:/oms/oms.sqlite"
+                            }
+                          }
+                        }
+                      };
+                      navigator.clipboard.writeText(JSON.stringify(mcpConfig, null, 2));
+                      setCopiedMcpConfig(true);
+                      setTimeout(() => setCopiedMcpConfig(false), 2500);
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/20 transition flex items-center justify-center gap-2"
+                  >
+                    {copiedMcpConfig ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedMcpConfig ? (isAr ? 'تم نسخ إعداد MCP JSON بنجاح!' : 'Copied MCP Config!') : (isAr ? 'نسخ إعداد MCP لبرامج الذكاء الاصطناعي' : 'Copy MCP Config JSON')}</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import { useTranslation } from '../../contexts/LanguageContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import QRCode from 'qrcode';
 import { Printer, FileText, Share2, Check, X } from 'lucide-react';
+import { sendWhatsAppMessage } from '../../lib/whatsappService';
 
 interface PosThermalReceiptModalProps {
   order: Order;
@@ -96,8 +97,11 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
       ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتعاملك مع مودرن هاوس للتجارة!\n\n🧾 إيصال مبيعات #${order.orderNumber}:\n${itemsSummary}\n\n💰 الإجمالي: ${formatCurrency(order.total)}\n💳 طريقة الدفع: ${order.paymentMethod}\n📅 التاريخ: ${formatDate(order.date)}\n🔗 الرابط الرقمي: ${invoiceUrl}\n\nنتمنى لك يوماً سعيداً!`
       : `Hello ${customer?.name || 'Valued Customer'},\nThank you for shopping at Modern House for Trading!\n\n🧾 Sales Receipt #${order.orderNumber}:\n${itemsSummary}\n\n💰 Total: ${formatCurrency(order.total)}\n💳 Payment: ${order.paymentMethod}\n📅 Date: ${formatDate(order.date)}\n🔗 Digital Link: ${invoiceUrl}\n\nHave a wonderful day!`;
 
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+    sendWhatsAppMessage({
+      phone,
+      message,
+      fallbackToWaMe: true
+    });
   };
 
   const vatTotal = order.items.reduce((acc, it) => acc + (it.vatAmount || 0), 0);

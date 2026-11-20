@@ -43,3 +43,6 @@ tunnel_url.txt
 .idea/
 .DS_Store
 Thumbs.db
+
+src/desktop/dist-bin/
+dist-bin/

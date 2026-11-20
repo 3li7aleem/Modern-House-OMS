@@ -474,6 +474,70 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
       return;
     }
 
+    // --- WhatsApp Direct API Endpoint ---
+    if (pathname === '/api/whatsapp/send' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const { phone, message, config: reqConfig } = payload;
+          
+          let cfg = reqConfig;
+          if ((!cfg || !cfg.token) && db) {
+            try {
+              const pref = db.db.prepare("SELECT value FROM preferences WHERE key = 'settings:whatsapp'").get();
+              if (pref && pref.value) cfg = { ...cfg, ...JSON.parse(pref.value) };
+            } catch {}
+          }
+          if (!cfg) cfg = { provider: 'direct' };
+
+          let cleanPhone = String(phone || '').replace(/[^\d]/g, '');
+          if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.slice(2);
+          if (cleanPhone.length === 8 && /^[1367]/.test(cleanPhone)) cleanPhone = '973' + cleanPhone;
+
+          if (cfg.provider === 'ultramsg' && cfg.instanceId && cfg.token) {
+            const url = `https://api.ultramsg.com/${cfg.instanceId}/messages/chat`;
+            const params = new URLSearchParams({
+              token: cfg.token,
+              to: cleanPhone,
+              body: message
+            });
+            const apiRes = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params.toString()
+            });
+            const apiJson = await apiRes.json();
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ ok: true, data: apiJson, provider: 'ultramsg' }));
+          }
+
+          if (cfg.provider === 'greenapi' && cfg.greenIdInstance && cfg.greenApiToken) {
+            const url = `https://api.green-api.com/waInstance${cfg.greenIdInstance}/sendMessage/${cfg.greenApiToken}`;
+            const apiRes = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chatId: `${cleanPhone}@c.us`, message })
+            });
+            const apiJson = await apiRes.json();
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ ok: true, data: apiJson, provider: 'greenapi' }));
+          }
+
+          const waUrl = cleanPhone 
+            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+            : `https://wa.me/?text=${encodeURIComponent(message)}`;
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, method: 'wa.me', url: waUrl, provider: 'direct' }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: false, error: err.message }));
+        }
+      });
+      return;
+    }
+
     // --- Static File Serving ---
     let relative = pathname === '/' ? '/index.html' : pathname;
     let filePath = path.join(rendererDir, relative);

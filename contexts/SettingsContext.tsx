@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
+import { WhatsAppConfig, DEFAULT_WHATSAPP_CONFIG, getStoredWhatsAppConfig, saveStoredWhatsAppConfig } from '../lib/whatsappService';
 
 const RAW_SVG_LOGO = `<svg viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
   <polygon points="200,30 70,250 200,250" fill="#dfb175" stroke="#dfb175" stroke-width="1" />
@@ -78,6 +79,8 @@ interface SettingsContextType {
     updateVoiceGreetingEnabled: (enabled: boolean) => void;
     entranceSupplicationEnabled: boolean;
     updateEntranceSupplicationEnabled: (enabled: boolean) => void;
+    whatsAppSettings: WhatsAppConfig;
+    updateWhatsAppSettings: (settings: Partial<WhatsAppConfig>) => void;
     settings: SettingsContextType; // For easy passing
 }
 
@@ -94,8 +97,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [heroImageUrl, setHeroImageUrl] = useState(DEFAULT_HERO_IMAGE_URL);
     const [voiceGreetingEnabled, setVoiceGreetingEnabled] = useState(true);
     const [entranceSupplicationEnabled, setEntranceSupplicationEnabled] = useState(true);
+    const [whatsAppSettings, setWhatsAppSettings] = useState<WhatsAppConfig>(DEFAULT_WHATSAPP_CONFIG);
 
     useEffect(() => {
+        setWhatsAppSettings(getStoredWhatsAppConfig());
         const savedLogo = localStorage.getItem('settings:logoUrl');
         const savedFooter = localStorage.getItem('settings:footerText');
         const savedColor = localStorage.getItem('settings:accentColor');
@@ -186,6 +191,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('settings:entranceSupplicationEnabled', String(enabled));
     };
 
+    const updateWhatsAppSettings = (newSettings: Partial<WhatsAppConfig>) => {
+        const updated = saveStoredWhatsAppConfig(newSettings);
+        setWhatsAppSettings(updated);
+    };
+
     const value = useMemo(() => {
         const self: SettingsContextType = {
             logoUrl,
@@ -208,6 +218,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             updateVoiceGreetingEnabled,
             entranceSupplicationEnabled,
             updateEntranceSupplicationEnabled,
+            whatsAppSettings,
+            updateWhatsAppSettings,
             get settings() { return self; }
         };
         return self;
@@ -221,7 +233,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deliveryNoteThankYou,
         heroImageUrl,
         voiceGreetingEnabled,
-        entranceSupplicationEnabled
+        entranceSupplicationEnabled,
+        whatsAppSettings
     ]);
 
     return (

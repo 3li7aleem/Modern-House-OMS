@@ -117,15 +117,30 @@ const ProductCard: React.FC<{
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => onAddToCart(product)}
-              disabled={!isAvailable}
-              className="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-amber-500 hover:bg-amber-600 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs transition shadow-sm disabled:opacity-40 flex items-center gap-1.5"
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>{isAr ? 'طلب' : 'Request'}</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* WhatsApp Fast Inquiry Button */}
+              <a
+                href={`https://wa.me/97335965477?text=${encodeURIComponent(
+                  `السلام عليكم مودرن هاوس للتجارة، أود الاستفسار عن توفر ومواصفات "${product.name}" (كود: ${product.sku || product.id}) المعروض بسعر ${product.salePrice} د.ب.`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-slate-950 transition border border-emerald-500/30 flex items-center justify-center shadow-xs"
+                title={isAr ? 'استفسار عبر واتساب' : 'Inquire via WhatsApp'}
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => onAddToCart(product)}
+                disabled={!isAvailable}
+                className="px-3.5 py-2.5 rounded-xl bg-slate-900 dark:bg-amber-500 hover:bg-amber-600 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs transition shadow-sm disabled:opacity-40 flex items-center gap-1.5"
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>{isAr ? 'طلب' : 'Request'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -565,6 +580,18 @@ const WebsiteScreen: React.FC = () => {
 
         </div>
       </footer>
+
+      {/* Floating WhatsApp Consultation Button */}
+      <a
+        href="https://wa.me/97335965477?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D9%85%D9%88%D8%AF%D8%B1%D9%86%20%D9%87%D8%A7%D9%88%D8%B3%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AA%D8%AC%D9%87%D9%8A%D8%B2%D8%A7%D8%AA%20%D9%88%D9%85%D8%B7%D8%A7%D8%A8%D8%AE%20%D9%85%D9%88%D8%AF%D8%B1%D9%86%20%D9%87%D8%A7%D9%88%D8%B3"
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-6 left-6 z-50 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-2xl flex items-center gap-2 border border-emerald-400/40 hover:scale-105 transition-all select-none"
+      >
+        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+        <MessageCircle className="w-4 h-4" />
+        <span>{isAr ? 'استشر خبير المطابخ واتساب' : 'Kitchen Consultation'}</span>
+      </a>
 
       {/* Floating Request Cart Pill */}
       {cartItemCount > 0 && (

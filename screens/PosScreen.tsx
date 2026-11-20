@@ -894,17 +894,22 @@ const PosScreen: React.FC = () => {
 
                     {/* Stock Alert Badge */}
                     <span
-                      className={`absolute top-2 right-2 rtl:right-auto rtl:left-2 z-10 text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                      className={`absolute top-2 right-2 rtl:right-auto rtl:left-2 z-10 text-[9px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1 ${
                         isOutOfStock
-                          ? 'bg-red-500 text-white'
+                          ? 'bg-rose-600 text-white'
                           : isLowStock
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-black/40 text-white backdrop-blur-xs'
+                          ? 'bg-amber-500 text-slate-950 font-black'
+                          : 'bg-emerald-600/90 text-white backdrop-blur-xs'
                       }`}
                     >
-                      {isOutOfStock
-                        ? (language === 'ar' ? 'نفد' : 'Out')
-                        : `${product.stock} ${language === 'ar' ? 'قطعة' : 'left'}`}
+                      <span className={`w-1.5 h-1.5 rounded-full ${isOutOfStock ? 'bg-white' : isLowStock ? 'bg-slate-950 animate-ping' : 'bg-emerald-200'}`} />
+                      <span>
+                        {isOutOfStock
+                          ? (language === 'ar' ? 'نفدت الكمية' : 'Out of Stock')
+                          : isLowStock
+                          ? (language === 'ar' ? `متبقي ${product.stock}` : `Only ${product.stock}`)
+                          : (language === 'ar' ? `متوفر (${product.stock})` : `${product.stock} in stock`)}
+                      </span>
                     </span>
 
                     {/* Product Image */}

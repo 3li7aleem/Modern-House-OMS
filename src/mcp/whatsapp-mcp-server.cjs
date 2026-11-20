@@ -70,6 +70,15 @@ function getProducts() {
   }
 }
 
+function getWhatsAppSettings() {
+  if (!db) return null;
+  try {
+    const row = db.prepare("SELECT value FROM preferences WHERE key = 'settings:whatsapp'").get();
+    if (row && row.value) return JSON.parse(row.value);
+  } catch {}
+  return null;
+}
+
 function formatPhone(phone) {
   let clean = String(phone || '').replace(/[+\s-]/g, '');
   if (clean.startsWith('00')) clean = clean.slice(2);
@@ -166,6 +175,7 @@ const TOOLS = [
 ];
 
 function handleToolCall(name, args = {}) {
+  const settings = getWhatsAppSettings() || { provider: 'direct' };
   switch (name) {
     case 'whatsapp_send_message': {
       const { phone, message, openUrl } = args;
@@ -178,7 +188,9 @@ function handleToolCall(name, args = {}) {
         phone: formatted,
         message,
         url,
-        opened: !!openUrl
+        opened: !!openUrl,
+        activeProvider: settings.provider || 'direct',
+        gatewayStatus: settings.provider !== 'direct' ? 'API Enabled' : 'Direct Link'
       };
     }
 

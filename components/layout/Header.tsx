@@ -17,12 +17,14 @@ import {
   User as UserIcon, 
   LogOut, 
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  MessageSquareQuote
 } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { t, language, changeLanguage } = useTranslation();
+  const isAr = language === 'ar';
   const { 
     currentUser, products, customers, orders, activeScreen, setActiveScreen, setSelectedItemId, 
     globalSearchQuery, setGlobalSearchQuery,
@@ -201,6 +203,27 @@ const Header: React.FC = () => {
         
         {/* Right side Actions (Mobile & Desktop) */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Live Sync Status Pill */}
+          <div 
+            onClick={() => setActiveScreen('settings')}
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold cursor-pointer hover:bg-emerald-500/20 transition select-none"
+            title={isAr ? 'قاعدة البيانات ومزامنة السحابة نشطة' : 'Local database & Cloud sync active'}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{isAr ? 'محلي وسحابي متصل' : 'Cloud & Local Synced'}</span>
+          </div>
+
+          {/* WhatsApp & MCP Quick Pill */}
+          <button
+            type="button"
+            onClick={() => setActiveScreen('settings')}
+            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition select-none"
+            title={isAr ? 'إعدادات واتساب والذكاء الاصطناعي MCP' : 'WhatsApp & MCP Settings'}
+          >
+            <MessageSquareQuote className="w-3.5 h-3.5 text-amber-500" />
+            <span>MCP WhatsApp</span>
+          </button>
+
           {/* Mobile Search Toggle */}
           <button
             onClick={() => setIsMobileSearchVisible(!isMobileSearchVisible)}
