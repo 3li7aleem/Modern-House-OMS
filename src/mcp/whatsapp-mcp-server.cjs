@@ -200,7 +200,8 @@ function handleToolCall(name, args = {}) {
         return `• ${name} (${it.quantity}x) = ${(it.price * it.quantity).toFixed(2)} د.ب`;
       }).join('\n');
 
-      const invoiceUrl = `${CLOUD_BASE_URL}/invoice/${order.orderNumber || order.id}`;
+      const invoiceNum = order.orderNumber || order.id;
+      const invoiceUrl = `${CLOUD_BASE_URL}/?invoice=${encodeURIComponent(invoiceNum)}`;
       const tmpl = TEMPLATES.find(t => t.id === 'sales_invoice');
       const message = tmpl.content(
         customer?.name,

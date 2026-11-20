@@ -47,7 +47,8 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
       }
     }
     base = base.replace(/\/+$/, '');
-    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
+    const invoiceNum = order.orderNumber || order.id;
+    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     const message = isAr
       ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتسوقك وثقتك بـ مودرن هاوس للتجارة!\n\n🧾 *تفاصيل فاتورة المبيعات رقم:* *${order.orderNumber}*\n${itemsList}\n\n💰 *المبلغ الإجمالي:* *${formatCurrency(order.total)}*\n💳 *طريقة الدفع:* ${order.paymentMethod}\n📅 *تاريخ الفاتورة:* ${formatDate(order.date)}\n🔗 *رابط الفاتورة السحابية:* ${invoiceUrl}\n\nنتمنى لك يوماً سعيداً ويسعدنا دائماً خدمتك! 🤍✨`
