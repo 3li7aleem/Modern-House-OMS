@@ -1,6 +1,6 @@
 {
   "name": "modern-house-desktop",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Modern House OMS - Offline Windows desktop application",
   "author": "Modern House",
@@ -15,7 +15,7 @@
     "electronVersion": "44.4.5",
     "appId": "bh.modernhouse.oms.desktop",
     "productName": "Modern House OMS",
-    "directories": { "output": "release" },
+    "directories": { "output": "dist-bin" },
     "files": ["main.cjs", "preload.cjs", "database.cjs", "installation.cjs", "backups.cjs", "server.cjs", "bin/**/*", "renderer/**/*", "package.json"],
     "asar": true,
     "npmRebuild": false,
