@@ -50,7 +50,8 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
       }
     }
     base = base.replace(/\/+$/, '');
-    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
+    const invoiceNum = order.orderNumber || order.id;
+    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     // Use direct clickable URL for the QR code so smartphone cameras immediately open the invoice web page
     QRCode.toDataURL(invoiceUrl, { 

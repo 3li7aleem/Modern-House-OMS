@@ -44,7 +44,8 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
       }
     }
     base = base.replace(/\/+$/, '');
-    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
+    const invoiceNum = order.orderNumber || order.id;
+    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     // Use direct clickable URL so mobile camera scan opens digital receipt immediately
     QRCode.toDataURL(invoiceUrl, { 
@@ -88,7 +89,8 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
       }
     }
     base = base.replace(/\/+$/, '');
-    const invoiceUrl = `${base}/invoice/${order.orderNumber || order.id}`;
+    const invoiceNum = order.orderNumber || order.id;
+    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     const message = language === 'ar'
       ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتعاملك مع مودرن هاوس للتجارة!\n\n🧾 إيصال مبيعات #${order.orderNumber}:\n${itemsSummary}\n\n💰 الإجمالي: ${formatCurrency(order.total)}\n💳 طريقة الدفع: ${order.paymentMethod}\n📅 التاريخ: ${formatDate(order.date)}\n🔗 الرابط الرقمي: ${invoiceUrl}\n\nنتمنى لك يوماً سعيداً!`

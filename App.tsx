@@ -183,7 +183,12 @@ const App: React.FC = () => {
   }
 
   // Public Invoice View on Vercel without requiring authentication
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/invoice/')) {
+  const isInvoiceRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/invoice/') ||
+    window.location.search.includes('invoice=') ||
+    window.location.hash.includes('invoice')
+  );
+  if (isInvoiceRoute) {
     return <PublicInvoiceScreen />;
   }
 

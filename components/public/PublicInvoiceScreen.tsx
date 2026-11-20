@@ -6,8 +6,18 @@ export const PublicInvoiceScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const pathParts = window.location.pathname.split('/invoice/');
-  const orderId = pathParts[1] ? decodeURIComponent(pathParts[1].replace(/\/+$/, '')) : '';
+  // Support query param (?invoice=ORD-1001), path (/invoice/ORD-1001), or hash (#/invoice/ORD-1001)
+  let orderId = '';
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('invoice') || params.get('id') || params.get('order');
+    if (q) {
+      orderId = q.trim();
+    } else {
+      const match = window.location.pathname.match(/\/invoice\/([^/?#]+)/) || window.location.hash.match(/invoice\/([^/?#]+)/);
+      if (match) orderId = decodeURIComponent(match[1].trim());
+    }
+  }
 
   useEffect(() => {
     if (!orderId) {
