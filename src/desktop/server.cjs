@@ -104,7 +104,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
     // CORS headers for local LAN tablet access
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-OMS-Session, Authorization');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -139,6 +139,10 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
 
     if (pathname === '/download/Modern-House-OMS-Setup.exe' || pathname === '/Modern-House-OMS-Setup.exe' || pathname === '/api/download/exe') {
       const candidates = [
+        path.join(process.env.USERPROFILE || 'C:\\Users\\7aleem', 'Desktop', 'Modern-House-OMS-Setup-1.3.0.exe'),
+        path.join(__dirname, 'dist-release', 'Modern-House-OMS-Setup-1.3.0.exe'),
+        path.join(process.env.USERPROFILE || 'C:\\Users\\7aleem', 'Desktop', 'Modern-House-OMS-Setup-1.2.0.exe'),
+        path.join(__dirname, 'dist-bin', 'Modern-House-OMS-Setup-1.2.0.exe'),
         path.join(__dirname, 'release', 'Modern-House-OMS-Setup-1.1.0.exe'),
         path.join(process.env.USERPROFILE || 'C:\\Users\\7aleem', 'Desktop', 'Modern-House-OMS-Setup-1.1.0.exe'),
         path.join(process.env.USERPROFILE || 'C:\\Users\\7aleem', 'Desktop', 'Modern House OMS', 'Modern-House-OMS-Setup.exe')
@@ -149,7 +153,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
         res.writeHead(200, {
           'Content-Type': 'application/vnd.microsoft.portable-executable',
           'Content-Length': stat.size,
-          'Content-Disposition': 'attachment; filename="Modern-House-OMS-Setup-1.1.0.exe"',
+          'Content-Disposition': 'attachment; filename="Modern-House-OMS-Setup-1.3.0.exe"',
           'Cache-Control': 'no-cache'
         });
         return fs.createReadStream(exePath).pipe(res);
@@ -162,12 +166,12 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
     if (pathname === '/api/check-update') {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       return res.end(JSON.stringify({
-        currentVersion: '1.1.0',
-        latestVersion: '1.1.0',
+        currentVersion: '1.3.0',
+        latestVersion: '1.3.0',
         updateAvailable: false,
-        releaseNotes: 'نظام إدارة العمليات الشامل - مودرن هاوس للتجارة (OMS v1.1.0). يشمل نقاط البيع، المخزون، عروض الأسعار، وقاعدة بيانات محلية سحابية.',
+        releaseNotes: 'نظام إدارة العمليات الشامل - مودرن هاوس للتجارة (OMS v1.3.0). يشمل إعادة تصميم واجهة نقاط البيع، إزالة الشريط السفلي، خط القاهرة المؤسسي، ولوحة تحكم تشغيلية متكاملة.',
         apkUrl: '/download/Modern-House-OMS.apk',
-        exeUrl: '/download/Modern-House-OMS-Setup.exe'
+        exeUrl: 'https://github.com/3li7aleem/Modern-House-OMS/releases/download/v1.3.0/Modern-House-OMS-Setup-1.3.0.exe'
       }));
     }
 
@@ -175,8 +179,8 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       return res.end(JSON.stringify({
         success: true,
-        version: '1.1.0',
-        message: 'تم تحديث كافة حزم النظام وقاعدة البيانات بنجاح، النظام يعمل بأحدث إصدار.'
+        version: '1.3.0',
+        message: 'تم تحديث كافة حزم النظام وقاعدة البيانات بنجاح، النظام يعمل بأحدث إصدار v1.3.0.'
       }));
     }
 
@@ -198,8 +202,8 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
         }
       }
 
-      // If order not found in local db or running in cloud without local db, proxy to desktop tunnel!
-      if (!order && queryId) {
+      // If running in cloud without local db, proxy to desktop tunnel!
+      if (!db && queryId) {
         const tunnelBase = process.env.DESKTOP_API_URL || 'https://washer-lines-shop-shark.trycloudflare.com';
         try {
           const tunnelRes = await fetch(`${tunnelBase.replace(/\/+$/, '')}${pathname}`);

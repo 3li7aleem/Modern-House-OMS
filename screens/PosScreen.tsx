@@ -653,9 +653,9 @@ const PosScreen: React.FC = () => {
   }, [customers, customerSearchQuery]);
 
   return (
-    <div className="flex flex-col gap-3 h-auto min-h-full xl:h-[calc(100vh-5.5rem)] relative">
+    <div className="flex flex-col gap-3 h-auto min-h-full lg:h-[calc(100vh-5.5rem)] relative">
       {/* Mobile Catalog vs Cart Switcher */}
-      <div className="xl:hidden flex rounded-2xl bg-slate-200/80 dark:bg-slate-800/80 p-1 flex-shrink-0 shadow-xs">
+      <div className="lg:hidden flex rounded-2xl bg-slate-200/80 dark:bg-slate-800/80 p-1 flex-shrink-0 shadow-xs">
         <button
           onClick={() => setMobileTab('catalog')}
           className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
@@ -685,9 +685,9 @@ const PosScreen: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-5 flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row gap-4 xl:gap-5 flex-1 min-h-0">
         {/* LEFT SECTION: Products & Search Catalog */}
-        <div className={`flex-1 flex-col min-w-0 space-y-3.5 h-full ${mobileTab === 'cart' ? 'hidden xl:flex' : 'flex'}`}>
+        <div className={`flex-1 flex-col min-w-0 space-y-3.5 h-full ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
         {/* Actions & Filters Toolbar */}
         <div className="bg-card dark:bg-dark-card p-3 rounded-2xl shadow-xs border border-border dark:border-dark-border flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           {/* Search bar & Barcode scan button */}
@@ -866,7 +866,7 @@ const PosScreen: React.FC = () => {
         </div>
 
         {/* Products Grid / List View */}
-        <div className="flex-1 overflow-y-auto xl:h-0 pr-1">
+        <div className="flex-1 overflow-y-auto lg:h-0 pr-1">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 pb-8">
               {filteredProducts.map(product => {
@@ -1038,13 +1038,13 @@ const PosScreen: React.FC = () => {
       </div>
 
       {/* RIGHT SECTION: Luxury Enterprise Active Order Cart & Checkout Panel */}
-      <div className={`w-full xl:w-[430px] flex-shrink-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl flex flex-col border border-slate-200/90 dark:border-slate-800 h-full overflow-hidden transition-all ${mobileTab === 'catalog' ? 'hidden xl:flex' : 'flex'}`}>
+      <div className={`w-full lg:w-[380px] xl:w-[430px] flex-shrink-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl flex flex-col border border-slate-200/90 dark:border-slate-800 h-full overflow-hidden transition-all ${mobileTab === 'catalog' ? 'hidden lg:flex' : 'flex'}`}>
         {/* Cart Header */}
         <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setMobileTab('catalog')}
-              className="xl:hidden p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl flex items-center gap-0.5 text-xs font-semibold mr-1 rtl:mr-0 rtl:ml-1 transition-colors"
+              className="lg:hidden p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl flex items-center gap-0.5 text-xs font-semibold mr-1 rtl:mr-0 rtl:ml-1 transition-colors"
               title={language === 'ar' ? 'الرجوع للمنتجات' : 'Back to products'}
             >
               <ChevronLeft className="w-5 h-5 rtl:rotate-180" />
@@ -1695,7 +1695,7 @@ const PosScreen: React.FC = () => {
 
       {/* Mobile floating quick checkout bar when viewing catalog */}
       {cartItems.length > 0 && mobileTab === 'catalog' && (
-        <div className="xl:hidden fixed bottom-4 left-3 right-3 z-40 animate-in slide-in-from-bottom-3 duration-200">
+        <div className="lg:hidden fixed bottom-4 left-3 right-3 z-40 animate-in slide-in-from-bottom-3 duration-200">
           <button
             onClick={() => setMobileTab('cart')}
             className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3.5 px-4 rounded-2xl shadow-2xl flex items-center justify-between font-bold text-xs sm:text-sm border border-white/10"
