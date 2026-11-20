@@ -5,12 +5,14 @@ interface LogoProps {
   className?: string;
   showText?: boolean;
   textColorClass?: string;
+  textSizeClass?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({ 
   className = "h-12 w-auto", 
   showText = true,
-  textColorClass = "text-text-primary dark:text-dark-text-primary"
+  textColorClass = "text-text-primary dark:text-dark-text-primary",
+  textSizeClass = "text-[13px] sm:text-[14px] font-black tracking-[0.14em]"
 }) => {
   return (
     <div className={`flex flex-row items-center justify-center gap-2.5 ${className}`}>
@@ -94,7 +96,7 @@ export const Logo: React.FC<LogoProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.3 }}
-            className={`text-[21px] font-extrabold tracking-[0.2em] uppercase whitespace-nowrap ${textColorClass}`}
+            className={`${textSizeClass} uppercase whitespace-nowrap ${textColorClass}`}
           >
             Modern House
           </motion.span>
