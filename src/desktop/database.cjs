@@ -1,4 +1,9 @@
-const { DatabaseSync } = require('node:sqlite');
+let DatabaseSync;
+try {
+  DatabaseSync = require('node:sqlite').DatabaseSync;
+} catch (e) {
+  DatabaseSync = null;
+}
 const { randomUUID, randomBytes, scryptSync, timingSafeEqual } = require('node:crypto');
 const COLLECTIONS = ['products', 'orders', 'customers', 'expenses', 'suppliers', 'drivers', 'deliveries', 'users', 'purchase_orders', 'notifications', 'requests', 'repairs', 'quotations', 'contracts'];
 const publicRecord = ({ passwordHash, pinHash, ...record }) => record;
@@ -15,6 +20,9 @@ const matches = (value, encoded) => {
 
 class LocalDatabase {
   constructor(filename) {
+    if (!DatabaseSync) {
+      throw new Error('Built-in node:sqlite is not supported in this Node.js runtime.');
+    }
     this.db = new DatabaseSync(filename);
     this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
       CREATE TABLE IF NOT EXISTS records (collection TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(collection,id));

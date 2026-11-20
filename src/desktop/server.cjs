@@ -100,7 +100,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
     }
   }
 
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
     // CORS headers for local LAN tablet access
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -186,11 +186,33 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
       const queryId = parts[1] || parsedUrl.searchParams.get('id') || parsedUrl.searchParams.get('no');
       
       let order = null;
-      if (queryId) {
-        order = db.get('orders', queryId);
-        if (!order) {
-          const allOrders = db.list('orders') || [];
-          order = allOrders.find(o => o.orderNumber === queryId || o.id === queryId);
+      if (db && queryId) {
+        try {
+          order = db.get('orders', queryId);
+          if (!order) {
+            const allOrders = db.list('orders') || [];
+            order = allOrders.find(o => o.orderNumber === queryId || o.id === queryId);
+          }
+        } catch (e) {
+          console.warn('Local database lookup error:', e.message);
+        }
+      }
+
+      // If order not found in local db or running in cloud without local db, proxy to desktop tunnel!
+      if (!order && queryId) {
+        const tunnelBase = process.env.DESKTOP_API_URL || 'https://washer-lines-shop-shark.trycloudflare.com';
+        try {
+          const tunnelRes = await fetch(`${tunnelBase.replace(/\/+$/, '')}${pathname}`);
+          if (tunnelRes.ok) {
+            const html = await tunnelRes.text();
+            res.writeHead(200, { 
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            });
+            return res.end(html);
+          }
+        } catch (tunnelErr) {
+          console.warn('Tunnel proxy error:', tunnelErr.message);
         }
       }
 
@@ -200,7 +222,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
           <!DOCTYPE html>
           <html dir="rtl" lang="ar">
           <head><meta charset="utf-8"><title>فاتورة غير موجودة</title><style>body{font-family:system-ui;text-align:center;padding:50px;background:#f8fafc;color:#334155}h2{color:#e11d48}</style></head>
-          <body><h2>تعذر العثور على الفاتورة المطلوبة</h2><p>يرجى التأكد من مسح الرمز الصحيح أو مراجعة إدارة المعرض.</p></body>
+          <body><h2>تعذر العثور على الفاتورة المطلوبة</h2><p>يرجى التأكد من مسح الرمز الصحيح أو مراجعة إدارة المعرض على هاتف 35965477.</p></body>
           </html>
         `);
       }
@@ -346,7 +368,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
 
     if (pathname === '/api/preferences' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      return res.end(JSON.stringify({ ok: true, data: db.preferences ? db.preferences() : {} }));
+      return res.end(JSON.stringify({ ok: true, data: (db && db.preferences) ? db.preferences() : { language: 'ar' } }));
     }
 
     if (pathname === '/api/preference' && req.method === 'POST') {
@@ -355,7 +377,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
       req.on('end', () => {
         try {
           const { key, value } = JSON.parse(body || '{}');
-          if (db.setPreference) db.setPreference(key, value);
+          if (db && db.setPreference) db.setPreference(key, value);
           if (typeof onDataChanged === 'function') onDataChanged(['preferences']);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: true }));
@@ -370,7 +392,26 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
     if (pathname === '/api/call' && req.method === 'POST') {
       let body = '';
       req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
+      req.on('end', async () => {
+        if (!db) {
+          const tunnelBase = process.env.DESKTOP_API_URL || 'https://washer-lines-shop-shark.trycloudflare.com';
+          try {
+            const proxyRes = await fetch(`${tunnelBase.replace(/\/+$/, '')}/api/call`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-OMS-Session': req.headers['x-oms-session'] || ''
+              },
+              body: body
+            });
+            const data = await proxyRes.text();
+            res.writeHead(proxyRes.status, { 'Content-Type': 'application/json' });
+            return res.end(data);
+          } catch (err) {
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Desktop daemon offline or unreachable' }));
+          }
+        }
         try {
           const parsedBody = JSON.parse(body || '{}');
           const { method, args = [], sessionUser } = parsedBody;
@@ -490,10 +531,15 @@ module.exports = { createTabletServer };
 
 if (require.main === module) {
   const os = require('node:os');
-  const { createInstallation } = require('./installation.cjs');
-  const controlDirectory = path.join(process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME + '/.config'), 'ModernHouseOMS');
-  const installation = createInstallation({ controlDirectory });
-  const db = installation.database;
+  let db = null;
+  try {
+    const { createInstallation } = require('./installation.cjs');
+    const controlDirectory = path.join(process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME + '/.config'), 'ModernHouseOMS');
+    const installation = createInstallation({ controlDirectory });
+    db = installation.database;
+  } catch (err) {
+    console.warn('Local database initialization skipped or running in cloud proxy mode:', err.message);
+  }
   const rendererDir = path.join(__dirname, 'renderer');
 
   const interfaces = os.networkInterfaces();

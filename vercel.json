@@ -1,16 +1,48 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "app": {
+      "root": ".",
+      "framework": "vite",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "desktop",
+          "format": "url",
+          "env": "DESKTOP_API_URL"
+        }
+      ]
+    },
+    "desktop": {
+      "root": "src/desktop",
+      "runtime": "node",
+      "entrypoint": "server.cjs"
+    }
+  },
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "desktop"
+      }
+    },
+    {
       "source": "/invoice/(.*)",
-      "destination": "/api/invoice?id=$1"
+      "destination": {
+        "service": "desktop"
+      }
     },
     {
       "source": "/download/(.*)",
-      "destination": "/api/download?file=$1"
+      "destination": {
+        "service": "desktop"
+      }
     },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "source": "/(.*)",
+      "destination": {
+        "service": "app"
+      }
     }
   ]
 }
