@@ -1345,20 +1345,20 @@ const PosScreen: React.FC = () => {
         </div>
 
         {/* Pricing, Discounts, Payment & Checkout Panel */}
-        <div className="p-3 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-2.5 text-xs">
+        <div className="p-2 sm:p-2.5 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
           {/* Discount Controls */}
-          <div className="p-2.5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 space-y-2 shadow-xs">
+          <div className="p-1.5 px-2 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 space-y-1 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Percent className="w-3.5 h-3.5 text-amber-500" />
+              <span className="font-bold text-[10px] text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                <Percent className="w-3 h-3 text-amber-500" />
                 {language === 'ar' ? 'الخصم الترويجي' : 'Discount'}
               </span>
               <div className="flex items-center gap-1">
-                <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                <div className="inline-flex rounded-md bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => setDiscountType('percent')}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-colors ${
+                    className={`px-1.5 py-0.2 rounded text-[9px] font-black transition-colors ${
                       discountType === 'percent'
                         ? 'bg-primary text-white shadow-xs'
                         : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -1369,7 +1369,7 @@ const PosScreen: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setDiscountType('fixed')}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-colors ${
+                    className={`px-1.5 py-0.2 rounded text-[9px] font-black transition-colors ${
                       discountType === 'fixed'
                         ? 'bg-primary text-white shadow-xs'
                         : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -1385,7 +1385,7 @@ const PosScreen: React.FC = () => {
                   value={discountValue || ''}
                   onChange={e => setDiscountValue(parseFloat(e.target.value) || 0)}
                   placeholder="0"
-                  className="w-16 px-2 py-1 text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-black outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900 dark:text-white"
+                  className="w-14 px-1.5 py-0.5 text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-[11px] font-black outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -1400,7 +1400,7 @@ const PosScreen: React.FC = () => {
                     setDiscountType('percent');
                     setDiscountValue(pct);
                   }}
-                  className={`flex-1 py-1 rounded-lg text-[10px] font-black transition-all ${
+                  className={`flex-1 py-0.5 rounded text-[9px] font-black transition-all ${
                     discountType === 'percent' && discountValue === pct
                       ? 'bg-amber-500 text-slate-950 font-black shadow-xs ring-1 ring-amber-400'
                       : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -1413,7 +1413,7 @@ const PosScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDiscountValue(0)}
-                  className="px-2 py-1 rounded-lg text-[10px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                  className="px-1.5 py-0.5 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                 >
                   {language === 'ar' ? 'إلغاء' : 'Reset'}
                 </button>
@@ -1422,11 +1422,11 @@ const PosScreen: React.FC = () => {
           </div>
 
           {/* Payment Method Selector */}
-          <div className="space-y-1.5">
-            <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300 block">
+          <div className="space-y-1">
+            <span className="font-bold text-[10px] text-slate-600 dark:text-slate-400 block">
               {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
             </span>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-4 gap-1">
               {[
                 { id: 'Cash', label: language === 'ar' ? 'نقداً (كاش)' : 'Cash', icon: Banknote },
                 { id: 'Card', label: language === 'ar' ? 'بطاقة' : 'Card', icon: CreditCard },
@@ -1440,13 +1440,13 @@ const PosScreen: React.FC = () => {
                     key={method.id}
                     type="button"
                     onClick={() => setPaymentMethod(method.id as any)}
-                    className={`py-2 px-1 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                    className={`py-1.5 px-1 rounded-lg border font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-sm ring-2 ring-primary/30'
+                        ? 'bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-2xs ring-1 ring-primary/30'
                         : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-3 h-3 flex-shrink-0" />
                     <span className="text-[10px] truncate">{method.label}</span>
                   </button>
                 );
@@ -1555,9 +1555,9 @@ const PosScreen: React.FC = () => {
 
           {/* Cash Quick Tender & Change Calculator */}
           {paymentMethod === 'Cash' && total > 0 && (
-            <div className="p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 space-y-2">
+            <div className="p-1.5 px-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60 space-y-1 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200">
+                <span className="text-[10px] font-bold text-emerald-900 dark:text-emerald-200">
                   {language === 'ar' ? 'المبلغ المستلم من العميل' : 'Cash Tendered'}
                 </span>
                 <input
@@ -1566,7 +1566,7 @@ const PosScreen: React.FC = () => {
                   value={cashTendered}
                   onChange={e => setCashTendered(e.target.value)}
                   placeholder={total.toFixed(3)}
-                  className="w-24 px-2 py-1 text-right bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-lg text-xs font-black outline-none text-emerald-950 dark:text-emerald-200 font-mono"
+                  className="w-20 px-1.5 py-0.5 text-right bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-md text-[11px] font-black outline-none text-emerald-950 dark:text-emerald-200 font-mono"
                 />
               </div>
 
@@ -1575,7 +1575,7 @@ const PosScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCashTendered(total.toFixed(3))}
-                  className="flex-1 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-lg text-[10px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
+                  className="flex-1 py-0.5 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-md text-[9px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
                 >
                   {language === 'ar' ? 'بالضبط' : 'Exact'}
                 </button>
@@ -1584,7 +1584,7 @@ const PosScreen: React.FC = () => {
                     key={val}
                     type="button"
                     onClick={() => setCashTendered(val.toString())}
-                    className="flex-1 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-lg text-[10px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
+                    className="flex-1 py-0.5 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-md text-[9px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
                   >
                     {val}
                   </button>
@@ -1593,11 +1593,11 @@ const PosScreen: React.FC = () => {
 
               {/* Change Returned Highlight */}
               {parsedCashTendered > 0 && (
-                <div className="pt-2 border-t border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between text-xs font-bold">
+                <div className="pt-1 border-t border-emerald-200/80 dark:border-emerald-900/60 flex items-center justify-between text-[11px] font-bold">
                   <span className="text-emerald-900 dark:text-emerald-300">
                     {language === 'ar' ? 'المتبقي للعميل (الباقي):' : 'Change Due:'}
                   </span>
-                  <span className="text-base font-black font-mono text-emerald-700 dark:text-emerald-400">
+                  <span className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-400">
                     {formatCurrency(changeDue)}
                   </span>
                 </div>
@@ -1606,7 +1606,7 @@ const PosScreen: React.FC = () => {
           )}
 
           {/* Totals Summary */}
-          <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-800 text-xs">
+          <div className="space-y-1 pt-1 border-t border-slate-200 dark:border-slate-800 text-[11px]">
             <div className="flex justify-between text-slate-500 dark:text-slate-400">
               <span>{language === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{formatCurrency(subtotal)}</span>
@@ -1623,15 +1623,15 @@ const PosScreen: React.FC = () => {
 
             {/* VAT Toggle & Amount */}
             <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-1.5 cursor-pointer">
+              <span className="flex items-center gap-1 cursor-pointer">
                 <input
                   type="checkbox"
                   id="vat-pos-toggle"
                   checked={isVatEnabled}
                   onChange={e => setIsVatEnabled(e.target.checked)}
-                  className="rounded text-primary focus:ring-primary w-3.5 h-3.5 cursor-pointer"
+                  className="rounded text-primary focus:ring-primary w-3 h-3 cursor-pointer"
                 />
-                <label htmlFor="vat-pos-toggle" className="cursor-pointer font-medium">
+                <label htmlFor="vat-pos-toggle" className="cursor-pointer font-medium text-[11px]">
                   {language === 'ar' ? 'ضريبة القيمة المضافة (10%)' : 'VAT (10%)'}
                 </label>
               </span>
@@ -1646,17 +1646,17 @@ const PosScreen: React.FC = () => {
             )}
 
             {/* Grand Total Luxury Banner */}
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white border border-slate-800 shadow-md flex items-center justify-between">
+            <div className="p-2 px-3 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white border border-slate-800 shadow-xs flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">
+                <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider block leading-tight">
                   {language === 'ar' ? 'المبلغ النهائي المطلوب' : 'Total Amount Due'}
                 </span>
-                <span className="text-xs font-medium text-slate-300">
+                <span className="text-[10px] font-medium text-slate-300">
                   {cartItems.reduce((acc, it) => acc + it.quantity, 0)} {language === 'ar' ? 'قطع شاملة الضريبة' : 'items incl. VAT'}
                 </span>
               </div>
               <div className="text-right rtl:text-left">
-                <span className="text-2xl font-black font-mono text-amber-400 tracking-tight">
+                <span className="text-xl font-black font-mono text-amber-400 tracking-tight leading-none">
                   {formatCurrency(total)}
                 </span>
               </div>
@@ -1667,24 +1667,24 @@ const PosScreen: React.FC = () => {
           <button
             onClick={handleCheckout}
             disabled={cartItems.length === 0 || isProcessing}
-            className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-emerald-600/20 hover:shadow-xl hover:shadow-emerald-600/30 active:scale-[0.99] flex items-center justify-between cursor-pointer disabled:cursor-not-allowed disabled:shadow-none"
+            className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 text-white rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-[0.99] flex items-center justify-between cursor-pointer disabled:cursor-not-allowed disabled:shadow-none"
           >
             {isProcessing ? (
               <div className="w-full flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>{language === 'ar' ? 'جاري تسجيل الفاتورة والدفع...' : 'Processing Sale...'}</span>
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span>{language === 'ar' ? 'إتمام البيع والدفع' : 'Complete Sale & Pay'}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-black text-base">{formatCurrency(total)}</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-white/90">F10</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-black text-sm sm:text-base">{formatCurrency(total)}</span>
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-white/20 text-white/90">F10</span>
                 </div>
               </>
             )}

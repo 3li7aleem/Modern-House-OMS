@@ -19,7 +19,11 @@ import {
   LogOut, 
   ShieldCheck,
   ChevronDown,
-  MessageSquareQuote
+  MessageSquareQuote,
+  PanelRightClose,
+  PanelRightOpen,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -29,7 +33,7 @@ const Header: React.FC = () => {
   const { 
     currentUser, products, customers, orders, activeScreen, setActiveScreen, setSelectedItemId, 
     globalSearchQuery, setGlobalSearchQuery,
-    toggleSidebar, toggleMobileMenu, notifications, markNotificationAsRead,
+    isSidebarOpen, toggleSidebar, toggleMobileMenu, notifications, markNotificationAsRead,
     logout, updateUser, setView,
   } = useAppContext();
   
@@ -151,9 +155,23 @@ const Header: React.FC = () => {
           {/* Desktop sidebar collapse toggle */}
           <button 
             onClick={toggleSidebar} 
-            className="text-text-secondary hover:text-text-primary transition-colors focus:outline-none dark:text-dark-text-secondary dark:hover:text-dark-text-primary hidden md:block p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="hidden md:flex items-center justify-center p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/90 dark:hover:bg-slate-700/90 border border-slate-200/80 dark:border-slate-700/80 transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
+            title={isSidebarOpen ? (isAr ? 'طي القائمة الجانبية' : 'Collapse Sidebar') : (isAr ? 'توسيع القائمة الجانبية' : 'Expand Sidebar')}
+            aria-label="Toggle Sidebar"
           >
-            <Menu className="w-5 h-5" />
+            {isAr ? (
+              isSidebarOpen ? (
+                <PanelRightClose className="w-5 h-5 text-slate-700 dark:text-slate-200 transition-transform" />
+              ) : (
+                <PanelRightOpen className="w-5 h-5 text-amber-500 transition-transform" />
+              )
+            ) : (
+              isSidebarOpen ? (
+                <PanelLeftClose className="w-5 h-5 text-slate-700 dark:text-slate-200 transition-transform" />
+              ) : (
+                <PanelLeftOpen className="w-5 h-5 text-amber-500 transition-transform" />
+              )
+            )}
           </button>
           
           <div className="flex flex-col min-w-0">
