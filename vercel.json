@@ -3,41 +3,10 @@
   "services": {
     "app": {
       "root": ".",
-      "framework": "vite",
-      "bindings": [
-        {
-          "type": "service",
-          "service": "desktop",
-          "format": "url",
-          "env": "DESKTOP_API_URL"
-        }
-      ]
-    },
-    "desktop": {
-      "root": "src/desktop",
-      "runtime": "node",
-      "entrypoint": "server.cjs"
+      "framework": "vite"
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": {
-        "service": "desktop"
-      }
-    },
-    {
-      "source": "/invoice/(.*)",
-      "destination": {
-        "service": "desktop"
-      }
-    },
-    {
-      "source": "/download/(.*)",
-      "destination": {
-        "service": "desktop"
-      }
-    },
     {
       "source": "/(.*)",
       "destination": {

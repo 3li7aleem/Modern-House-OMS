@@ -16,24 +16,23 @@ export const PublicInvoiceScreen: React.FC = () => {
       return;
     }
 
-    // Try fetching from the server invoice endpoint
-    fetch(`/api/invoice/${encodeURIComponent(orderId)}`)
+    const tunnelBase = 'https://washer-lines-shop-shark.trycloudflare.com';
+    
+    // Fetch directly from the active live store daemon via CORS
+    fetch(`${tunnelBase}/invoice/${encodeURIComponent(orderId)}`)
       .then(async res => {
         if (!res.ok) {
-          // Fallback to direct invoice route
-          return fetch(`/invoice/${encodeURIComponent(orderId)}`);
+          throw new Error(`الفاتورة رقم ${orderId} غير متوفرة أو لم يتم رفعها بعد.`);
         }
-        return res;
+        return res.text();
       })
-      .then(async res => {
-        if (!res.ok) throw new Error(`الفاتورة رقم ${orderId} غير متوفرة.`);
-        const text = await res.text();
-        setInvoiceHtml(text);
+      .then(html => {
+        setInvoiceHtml(html);
         setLoading(false);
       })
       .catch(err => {
         console.error('Invoice fetch error:', err);
-        setError(err.message || 'تعذر تحميل الفاتورة');
+        setError('تعذر الاتصال بخادم المعرض لجلب الفاتورة. يرجى التأكد من تشغيل البرنامج المكتبي.');
         setLoading(false);
       });
   }, [orderId]);
