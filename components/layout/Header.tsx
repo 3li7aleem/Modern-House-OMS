@@ -5,6 +5,7 @@ import { StorageImage } from '../StorageImage';
 import { useAppContext } from '../../contexts/AppContext';
 import { Screen, AppNotification } from '../../types';
 import EditProfileModal from '../users/EditProfileModal';
+import { SystemHealthModal } from './SystemHealthModal';
 import { 
   Sun, 
   Moon, 
@@ -35,13 +36,28 @@ const Header: React.FC = () => {
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileSearchVisible, setIsMobileSearchVisible] = useState(false);
 
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+
+  // Ctrl+K Global Shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const lowStockItems = products.filter(p => p.stock <= p.lowStockThreshold);
   const unreadNotifications = notifications.filter(n => !n.read);
@@ -137,12 +153,19 @@ const Header: React.FC = () => {
             onClick={toggleSidebar} 
             className="text-text-secondary hover:text-text-primary transition-colors focus:outline-none dark:text-dark-text-secondary dark:hover:text-dark-text-primary hidden md:block p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
           
-          <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
-            {t(`sidebar.nav.${activeScreen}`)}
-          </h1>
+          <div className="flex flex-col min-w-0">
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+              <span>{isAr ? 'مودرن هاوس' : 'Modern House'}</span>
+              <span>/</span>
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">{t(`sidebar.nav.${activeScreen}`)}</span>
+            </div>
+            <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate leading-tight">
+              {t(`sidebar.nav.${activeScreen}`)}
+            </h1>
+          </div>
         </div>
         
         {/* Desktop Global Search */}
@@ -150,9 +173,10 @@ const Header: React.FC = () => {
           <div className="relative w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 rtl:left-auto rtl:right-3.5" />
             <input 
+              ref={searchInputRef}
               type="text"
-              placeholder={t('header.search_placeholder') || 'Search globally...'}
-              className="w-full pl-10 pr-16 rtl:pl-16 rtl:pr-10 py-2 bg-slate-100/80 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-transparent focus:border-slate-300 dark:focus:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-primary/20 transition-all text-slate-900 dark:text-white"
+              placeholder={isAr ? 'البحث السريع في النظام (المنتجات، العملاء، الفواتير)... Ctrl+K' : 'Search globally (products, customers, orders)... Ctrl+K'}
+              className="w-full pl-10 pr-16 rtl:pl-16 rtl:pr-10 py-2 bg-slate-100/80 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 focus:border-amber-500 dark:focus:border-amber-500 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-amber-500/20 transition-all text-slate-900 dark:text-white"
               value={globalSearchQuery || ''}
               onChange={(e) => {
                 setGlobalSearchQuery(e.target.value);
@@ -205,9 +229,9 @@ const Header: React.FC = () => {
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Live Sync Status Pill */}
           <div 
-            onClick={() => setActiveScreen('settings')}
+            onClick={() => setIsHealthModalOpen(true)}
             className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold cursor-pointer hover:bg-emerald-500/20 transition select-none"
-            title={isAr ? 'قاعدة البيانات ومزامنة السحابة نشطة' : 'Local database & Cloud sync active'}
+            title={isAr ? 'مركز صحة النظام والمزامنة' : 'System Health & Sync Center'}
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>{isAr ? 'محلي وسحابي متصل' : 'Cloud & Local Synced'}</span>
@@ -476,6 +500,11 @@ const Header: React.FC = () => {
             await updateUser(currentUser.id, updatedData);
           }}
         />
+      )}
+
+      {/* System Health & Sync Center Modal */}
+      {isHealthModalOpen && (
+        <SystemHealthModal onClose={() => setIsHealthModalOpen(false)} />
       )}
     </>
   );

@@ -28,6 +28,10 @@
       })();
     </script>
     <title>Modern House for Trading OMS</title>
+    <!-- Enterprise Arabic Fonts: Cairo & IBM Plex Sans Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     
@@ -39,39 +43,44 @@
           extend: {
             colors: {
               'primary': {
-                DEFAULT: '#0f172a', // slate-900
-                'hover': '#1e293b', // slate-800
-                'focus': '#334155', // slate-700
+                DEFAULT: '#14213D', // Enterprise Primary Navy
+                'hover': '#1F2E4D',
+                'focus': '#2B3E66',
               },
-              'secondary': '#f4f4f5', // zinc-100
-              'background': '#fafafa', // neutral-50
-              'foreground': '#09090b', // zinc-950
-              'card': '#ffffff',
-              'sidebar': '#ffffff',
-              'sidebar-hover': '#f4f4f5',
-              'card-foreground': '#09090b',
-              'text-primary': '#09090b',
-              'text-secondary': '#71717a', // zinc-500
-              'border': '#e4e4e7', // zinc-200
-              'input': '#f4f4f5',
-              'ring': '#18181b',
+              'accent': {
+                DEFAULT: '#F59E0B', // Modern House Warm Amber
+                'hover': '#D97706',
+                'light': '#FEF3C7',
+              },
+              'secondary': '#F1F5F9', // slate-100
+              'background': '#F8FAFC', // slate-50
+              'foreground': '#0F172A', // slate-900
+              'card': '#FFFFFF',
+              'sidebar': '#FFFFFF',
+              'sidebar-hover': '#F1F5F9',
+              'card-foreground': '#0F172A',
+              'text-primary': '#0F172A',
+              'text-secondary': '#64748B', // slate-500
+              'border': '#E2E8F0', // slate-200
+              'input': '#F8FAFC',
+              'ring': '#14213D',
 
               'dark': {
-                'background': '#09090b', // zinc-950
-                'foreground': '#fafafa', // neutral-50
-                'card': '#09090b',
-                'card-foreground': '#fafafa',
-                'text-primary': '#fafafa',
-                'text-secondary': '#a1a1aa', // zinc-400
-                'border': '#27272a', // zinc-800
-                'input': '#27272a',
-                'ring': '#e4e4e7',
-                'sidebar': '#09090b',
-                'sidebar-hover': '#18181b', // zinc-900
+                'background': '#0B132B', // Deep Enterprise Navy Background
+                'foreground': '#F8FAFC',
+                'card': '#111C38', // Surface card in dark
+                'card-foreground': '#F8FAFC',
+                'text-primary': '#F8FAFC',
+                'text-secondary': '#94A3B8', // slate-400
+                'border': '#1E293B', // slate-800
+                'input': '#1E293B',
+                'ring': '#38BDF8',
+                'sidebar': '#0F172A',
+                'sidebar-hover': '#1E293B',
               },
             },
             fontFamily: {
-              sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+              sans: ['Cairo', 'IBM Plex Sans Arabic', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
             },
             animation: {
               'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -84,8 +93,9 @@
               }
             },
             boxShadow: {
-              'soft': '0 4px 24px rgba(0,0,0,0.03)',
-              'soft-hover': '0 8px 32px rgba(0,0,0,0.06)',
+              'soft': '0 2px 12px rgba(15, 23, 42, 0.04)',
+              'soft-hover': '0 6px 20px rgba(15, 23, 42, 0.08)',
+              'card': '0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05)',
             }
           },
         },

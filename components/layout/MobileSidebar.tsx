@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { useTranslation } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { NAV_ITEMS } from '../../constants';
+import { SIDEBAR_GROUPS } from './Sidebar';
 import { StorageImage } from '../StorageImage';
 import Logo from './Logo';
 import { 
@@ -138,35 +138,48 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isMobileMenuOpen, toggleM
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-          <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2 px-2">
-            {language === 'ar' ? 'أقسام النظام' : 'System Modules'}
-          </p>
-          {visibleNavItems.map((item) => {
-            const isActive = activeScreen === item.screen;
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+          {SIDEBAR_GROUPS.map((group) => {
+            const visibleItems = group.items.filter(it => 
+              userPermissions.length === 0 || userPermissions.includes(it.screen)
+            );
+            if (visibleItems.length === 0) return null;
+
             return (
-              <button
-                key={item.screen}
-                onClick={() => {
-                  setActiveScreen(item.screen);
-                  toggleMobileMenu();
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-start transition-all duration-200 rounded-xl group ${
-                  isActive 
-                    ? 'bg-primary text-white shadow-md shadow-primary/25 font-bold' 
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-primary'}`}>
-                    {item.icon}
-                  </div>
-                  <span className="text-sm">{t(`sidebar.nav.${item.screen}`)}</span>
+              <div key={group.id} className="space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider px-2">
+                  {language === 'ar' ? group.titleAr : group.titleEn}
+                </p>
+                <div className="space-y-0.5">
+                  {visibleItems.map((item) => {
+                    const isActive = activeScreen === item.screen;
+                    return (
+                      <button
+                        key={item.screen}
+                        onClick={() => {
+                          setActiveScreen(item.screen);
+                          toggleMobileMenu();
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-start transition-all duration-150 rounded-xl group ${
+                          isActive 
+                            ? 'bg-primary text-white dark:bg-amber-500 dark:text-slate-950 shadow-xs font-bold' 
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`transition-colors ${isActive ? 'text-amber-400 dark:text-slate-950' : 'text-slate-400 group-hover:text-primary'}`}>
+                            {item.icon}
+                          </div>
+                          <span className="text-xs">{t(`sidebar.nav.${item.screen}`)}</span>
+                        </div>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-slate-950 animate-pulse" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-                {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                )}
-              </button>
+              </div>
             );
           })}
         </nav>
