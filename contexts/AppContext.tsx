@@ -324,7 +324,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (window.omsDesktop) {
       const { authService: localAuthService } = await import('../src/desktop/localService');
-      return localAuthService.loginWithPin(cleanPin);
+      const user = await localAuthService.loginWithPin(cleanPin);
+      if (user) {
+        const defaultPerms = ROLE_PERMISSIONS[user.role] || [];
+        const mergedPermissions = Array.from(new Set([...(user.permissions || defaultPerms), ...defaultPerms]));
+        const authenticatedUser: User = { ...user, permissions: mergedPermissions };
+        setCurrentUser(authenticatedUser);
+        setView('oms');
+        return authenticatedUser;
+      }
+      return user;
     }
 
     // Try background Firebase Auth session
@@ -337,7 +346,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!matchedUser && cleanPin === '1234') {
       matchedUser = users.find(u => u.status === 'Active') || {
         id: 'admin_pin_user',
-        name: 'Master Admin',
+        name: 'المدير العام',
         email: 'admin@modernhouse.bh',
         role: 'Admin',
         permissions: ROLE_PERMISSIONS['Admin'],
