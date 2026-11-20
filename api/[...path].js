@@ -1,8 +1,5 @@
 export default async function handler(req, res) {
-  const targetBase = process.env.DESKTOP_API_URL;
-  if (!targetBase) {
-    return res.status(500).json({ error: 'DESKTOP_API_URL binding not configured' });
-  }
+  const targetBase = process.env.DESKTOP_API_URL || 'https://washer-lines-shop-shark.trycloudflare.com';
 
   try {
     const url = new URL(req.url, targetBase);

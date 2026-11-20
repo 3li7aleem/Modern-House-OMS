@@ -27,6 +27,12 @@
       }
     },
     {
+      "source": "/invoice/(.*)",
+      "destination": {
+        "service": "desktop"
+      }
+    },
+    {
       "source": "/(.*)",
       "destination": {
         "service": "app"

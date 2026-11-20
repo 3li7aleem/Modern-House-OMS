@@ -16,6 +16,7 @@ import UsersScreen from './screens/UsersScreen';
 import PurchaseOrdersScreen from './screens/PurchaseOrdersScreen';
 import MaintenanceScreen from './screens/MaintenanceScreen';
 import AuthScreen from './screens/AuthScreen';
+import { PublicInvoiceScreen } from './components/public/PublicInvoiceScreen';
 import RequestsScreen from './screens/RequestsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ReportsScreen from './screens/ReportsScreen';
@@ -175,6 +176,11 @@ const App: React.FC = () => {
 
   if (isLoading || !hasCheckedSession) {
     return <LoadingSpinner />;
+  }
+
+  // Public Invoice View on Vercel without requiring authentication
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/invoice/')) {
+    return <PublicInvoiceScreen />;
   }
 
   // --- Require Login to Access OMS ---
