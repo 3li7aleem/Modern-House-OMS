@@ -26,25 +26,35 @@ export const PublicInvoiceScreen: React.FC = () => {
       return;
     }
 
-    const tunnelBase = 'https://washer-lines-shop-shark.trycloudflare.com';
-    
-    // Fetch directly from the active live store daemon via CORS
-    fetch(`${tunnelBase}/invoice/${encodeURIComponent(orderId)}`)
-      .then(async res => {
-        if (!res.ok) {
-          throw new Error(`الفاتورة رقم ${orderId} غير متوفرة أو لم يتم رفعها بعد.`);
+    const candidateBases = [
+      'https://oral-allocated-isp-inf.trycloudflare.com',
+      'https://washer-lines-shop-shark.trycloudflare.com',
+      (typeof window !== 'undefined' ? window.location.origin : ''),
+      'http://localhost:3050'
+    ].filter(Boolean);
+
+    const tryFetchInvoice = async () => {
+      let lastErr = null;
+      for (const base of candidateBases) {
+        try {
+          const res = await fetch(`${base}/invoice/${encodeURIComponent(orderId)}`);
+          if (res.ok) {
+            const html = await res.text();
+            if (html && html.includes('<!DOCTYPE html>')) {
+              setInvoiceHtml(html);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (e) {
+          lastErr = e;
         }
-        return res.text();
-      })
-      .then(html => {
-        setInvoiceHtml(html);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Invoice fetch error:', err);
-        setError('تعذر الاتصال بخادم المعرض لجلب الفاتورة. يرجى التأكد من تشغيل البرنامج المكتبي.');
-        setLoading(false);
-      });
+      }
+      setError(`تعذر العثور على الفاتورة رقم ${orderId} أو تعذر الاتصال بخادم المعرض الرئيسي.`);
+      setLoading(false);
+    };
+
+    tryFetchInvoice();
   }, [orderId]);
 
   if (loading) {
