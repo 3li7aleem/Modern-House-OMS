@@ -149,9 +149,22 @@ export async function callGeminiApi(
     const errorJson = await res.json().catch(() => ({}));
     const rawMsg = errorJson.error?.message || '';
 
-    // If the requested model is deprecated or not available, gracefully try modern fallbacks
-    if (rawMsg.includes('no longer available') || rawMsg.includes('not found') || rawMsg.includes('NOT_FOUND')) {
-      const fallbacks = ['gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    // If the requested model is experiencing high demand, spikes, rate limits or deprecation,
+    // automatically failover to highly available stable models (gemini-2.0-flash, gemini-1.5-flash, etc.)
+    const isRecoverableError =
+      res.status === 503 ||
+      res.status === 429 ||
+      res.status === 500 ||
+      rawMsg.toLowerCase().includes('demand') ||
+      rawMsg.toLowerCase().includes('overloaded') ||
+      rawMsg.toLowerCase().includes('temporar') ||
+      rawMsg.toLowerCase().includes('resource_exhausted') ||
+      rawMsg.toLowerCase().includes('no longer available') ||
+      rawMsg.toLowerCase().includes('not found') ||
+      rawMsg.includes('NOT_FOUND');
+
+    if (isRecoverableError) {
+      const fallbacks = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.8-flash', 'gemini-1.5-pro'];
       for (const fb of fallbacks) {
         if (fb !== model) {
           try {
@@ -163,15 +176,26 @@ export async function callGeminiApi(
             });
             if (fbRes.ok) {
               const fbData = await fbRes.json();
-              saveStoredAiConfig({ model: fb });
-              return fbData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              const recoveredText = fbData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (recoveredText) {
+                // Automatically switch the user to the stable working model
+                try {
+                  saveStoredAiConfig({ model: fb });
+                } catch {}
+                return recoveredText;
+              }
             }
           } catch {}
         }
       }
     }
 
-    const msg = rawMsg || `HTTP ${res.status}: فشل الاتصال بخدمة الذكاء الاصطناعي`;
+    let msg = rawMsg;
+    if (rawMsg.toLowerCase().includes('demand') || res.status === 503) {
+      msg = 'تشهد خوادم Google ضغطاً مؤقتاً كبيراً (High Demand). تم تجربة النماذج البديلة، يرجى المحاولة مرة أخرى بعد لحظات أو اختيار Gemini 2.0 Flash من الإعدادات.';
+    } else if (!msg) {
+      msg = `HTTP ${res.status}: فشل الاتصال بخدمة الذكاء الاصطناعي`;
+    }
     throw new Error(msg);
   }
 
