@@ -1631,7 +1631,7 @@ const SettingsScreen: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs sm:text-sm text-indigo-200/90 mt-1 max-w-2xl leading-relaxed">
-                    منظومة متكاملة مدعومة بأحدث نماذج Google Gemini 2.5 Flash لتوليد عروض الأسعار، تشخيص أعطال الصيانة بالكاميرا، مسح فواتير الموردين، وتحسين سلاسل التوصيل لمناطق البحرين.
+                    منظومة متكاملة مدعومة بأحدث نماذج Google Gemini 3.8 Flash لتوليد عروض الأسعار، تشخيص أعطال الصيانة بالكاميرا، مسح فواتير الموردين، وتحسين سلاسل التوصيل لمناطق البحرين.
                   </p>
                 </div>
               </div>
@@ -1696,7 +1696,7 @@ const SettingsScreen: React.FC = () => {
                   onChange={(e) => setAiConfig(prev => ({ ...prev, model: e.target.value }))}
                   className="w-full px-4 py-3 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none text-text-primary dark:text-dark-text-primary"
                 >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (الأحدث، فائق السرعة والرؤية - موصى به)</option>
+                  <option value="gemini-3.8-flash">Gemini 3.8 Flash (الأحدث لعام 2026، فائق السرعة والرؤية - موصى به)</option>
                   <option value="gemini-2.0-flash">Gemini 2.0 Flash (سريع واقتصادي)</option>
                   <option value="gemini-1.5-pro">Gemini 1.5 Pro (للمهام والتحليلات المعقدة)</option>
                   <option value="gemini-1.5-flash">Gemini 1.5 Flash (الإصدار القياسي المستقر)</option>

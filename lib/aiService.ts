@@ -22,7 +22,7 @@ export interface AiConfig {
 
 export const DEFAULT_AI_CONFIG: AiConfig = {
   apiKey: '',
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3.8-flash',
   enabled: true,
   autoSuggestPos: true,
   temperature: 0.2
@@ -32,7 +32,15 @@ export function getStoredAiConfig(): AiConfig {
   try {
     const saved = localStorage.getItem('settings:gemini_ai');
     if (saved) {
-      return { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) };
+      const parsed = { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) };
+      // Auto-migrate obsolete or deprecated models to gemini-3.8-flash
+      if (!parsed.model || parsed.model === 'gemini-2.5-flash') {
+        parsed.model = 'gemini-3.8-flash';
+        try {
+          localStorage.setItem('settings:gemini_ai', JSON.stringify(parsed));
+        } catch {}
+      }
+      return parsed;
     }
   } catch {}
   return DEFAULT_AI_CONFIG;
@@ -82,7 +90,11 @@ export async function callGeminiApi(
     throw new Error('مفتاح Gemini API غير محدد. يرجى إدخال مفتاح API في صفحة الإعدادات (قسم الذكاء الاصطناعي).');
   }
 
-  const model = options.model || getStoredAiConfig().model || 'gemini-2.5-flash';
+  const rawModel = options.model || getStoredAiConfig().model || 'gemini-3.8-flash';
+  let model = rawModel.replace(/^models\//, '');
+  if (model === 'gemini-2.5-flash') {
+    model = 'gemini-3.8-flash';
+  }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const contents: any[] = [];
@@ -135,7 +147,31 @@ export async function callGeminiApi(
 
   if (!res.ok) {
     const errorJson = await res.json().catch(() => ({}));
-    const msg = errorJson.error?.message || `HTTP ${res.status}: فشل الاتصال بخدمة الذكاء الاصطناعي`;
+    const rawMsg = errorJson.error?.message || '';
+
+    // If the requested model is deprecated or not available, gracefully try modern fallbacks
+    if (rawMsg.includes('no longer available') || rawMsg.includes('not found') || rawMsg.includes('NOT_FOUND')) {
+      const fallbacks = ['gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      for (const fb of fallbacks) {
+        if (fb !== model) {
+          try {
+            const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fb}:generateContent?key=${apiKey}`;
+            const fbRes = await fetch(fallbackUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            });
+            if (fbRes.ok) {
+              const fbData = await fbRes.json();
+              saveStoredAiConfig({ model: fb });
+              return fbData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            }
+          } catch {}
+        }
+      }
+    }
+
+    const msg = rawMsg || `HTTP ${res.status}: فشل الاتصال بخدمة الذكاء الاصطناعي`;
     throw new Error(msg);
   }
 
