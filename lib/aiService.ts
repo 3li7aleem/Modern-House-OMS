@@ -22,7 +22,7 @@ export interface AiConfig {
 
 export const DEFAULT_AI_CONFIG: AiConfig = {
   apiKey: '',
-  model: 'gemini-3.8-flash',
+  model: 'gemini-3.1-flash-lite',
   enabled: true,
   autoSuggestPos: true,
   temperature: 0.2
@@ -33,9 +33,9 @@ export function getStoredAiConfig(): AiConfig {
     const saved = localStorage.getItem('settings:gemini_ai');
     if (saved) {
       const parsed = { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) };
-      // Auto-migrate obsolete or deprecated models to gemini-3.8-flash
-      if (!parsed.model || parsed.model === 'gemini-2.5-flash') {
-        parsed.model = 'gemini-3.8-flash';
+      // Auto-migrate obsolete or deprecated 2.x and 1.5 models to Gemini 3 series
+      if (!parsed.model || parsed.model.includes('2.') || parsed.model.includes('1.5')) {
+        parsed.model = 'gemini-3.1-flash-lite';
         try {
           localStorage.setItem('settings:gemini_ai', JSON.stringify(parsed));
         } catch {}
@@ -90,10 +90,10 @@ export async function callGeminiApi(
     throw new Error('مفتاح Gemini API غير محدد. يرجى إدخال مفتاح API في صفحة الإعدادات (قسم الذكاء الاصطناعي).');
   }
 
-  const rawModel = options.model || getStoredAiConfig().model || 'gemini-3.8-flash';
+  const rawModel = options.model || getStoredAiConfig().model || 'gemini-3.1-flash-lite';
   let model = rawModel.replace(/^models\//, '');
-  if (model === 'gemini-2.5-flash') {
-    model = 'gemini-3.8-flash';
+  if (model.includes('2.') || model.includes('1.5') || model === 'gemini-2.5-flash') {
+    model = 'gemini-3.1-flash-lite';
   }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -150,7 +150,7 @@ export async function callGeminiApi(
     const rawMsg = errorJson.error?.message || '';
 
     // If the requested model is experiencing high demand, spikes, rate limits or deprecation,
-    // automatically failover to highly available stable models (gemini-2.0-flash, gemini-1.5-flash, etc.)
+    // automatically failover to highly available Gemini 3 generation models (3.1-flash-lite, 3.5-flash, 3.8-flash)
     const isRecoverableError =
       res.status === 503 ||
       res.status === 429 ||
@@ -164,7 +164,7 @@ export async function callGeminiApi(
       rawMsg.includes('NOT_FOUND');
 
     if (isRecoverableError) {
-      const fallbacks = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.8-flash', 'gemini-1.5-pro'];
+      const fallbacks = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
       for (const fb of fallbacks) {
         if (fb !== model) {
           try {
@@ -192,7 +192,7 @@ export async function callGeminiApi(
 
     let msg = rawMsg;
     if (rawMsg.toLowerCase().includes('demand') || res.status === 503) {
-      msg = 'تشهد خوادم Google ضغطاً مؤقتاً كبيراً (High Demand). تم تجربة النماذج البديلة، يرجى المحاولة مرة أخرى بعد لحظات أو اختيار Gemini 2.0 Flash من الإعدادات.';
+      msg = 'تشهد خوادم Google ضغطاً مؤقتاً كبيراً (High Demand). تم تجربة النماذج البديلة، يرجى المحاولة بعد لحظات أو اختيار Gemini 3.1 Flash-Lite من الإعدادات.';
     } else if (!msg) {
       msg = `HTTP ${res.status}: فشل الاتصال بخدمة الذكاء الاصطناعي`;
     }

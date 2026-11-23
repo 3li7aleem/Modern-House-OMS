@@ -1696,10 +1696,9 @@ const SettingsScreen: React.FC = () => {
                   onChange={(e) => setAiConfig(prev => ({ ...prev, model: e.target.value }))}
                   className="w-full px-4 py-3 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none text-text-primary dark:text-dark-text-primary"
                 >
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (فائق السرعة ومستقر جداً ضد ضغط الخوادم - موصى به)</option>
-                  <option value="gemini-3.8-flash">Gemini 3.8 Flash (النموذج الأحدث)</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (مستقر وعالي التحمل)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (للمهام والتحليلات المتقدمة)</option>
+                  <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (فائق السرعة، استجابة لحظية وبدون ضغط خوادم - موصى به)</option>
+                  <option value="gemini-3.5-flash">Gemini 3.5 Flash (متوازن وعالي الذكاء)</option>
+                  <option value="gemini-3.8-flash">Gemini 3.8 Flash (النموذج الأعلى قدرة للتحليلات المتقدمة)</option>
                 </select>
               </div>
 
