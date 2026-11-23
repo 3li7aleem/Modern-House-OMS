@@ -51,7 +51,35 @@ const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, settings }) =>
     }
     base = base.replace(/\/+$/, '');
     const invoiceNum = order.orderNumber || order.id;
-    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
+
+    // Compact order snapshot for instant zero-dependency QR code verification
+    let inlineData = '';
+    try {
+      const compact = {
+        orderNumber: invoiceNum,
+        date: order.date,
+        customerName: customer?.name || order.customerName || 'عميل نقدي',
+        customerPhone: customer?.phone || order.customerPhone || '',
+        items: (order.items || []).map(it => {
+          const prod = productMap.get(it.productId);
+          return {
+            name: prod?.name || it.name || 'صنف',
+            sku: prod?.sku || '',
+            price: it.price,
+            quantity: it.quantity
+          };
+        }),
+        subtotal: order.subtotal || order.total,
+        discount: order.discount || 0,
+        total: order.total,
+        paymentMethod: order.paymentMethod || 'Cash'
+      };
+      inlineData = btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+    } catch {}
+
+    const invoiceUrl = inlineData && inlineData.length < 1400
+      ? `${base}/?invoice=${encodeURIComponent(invoiceNum)}&d=${encodeURIComponent(inlineData)}`
+      : `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     // Use direct clickable URL for the QR code so smartphone cameras immediately open the invoice web page
     QRCode.toDataURL(invoiceUrl, { 

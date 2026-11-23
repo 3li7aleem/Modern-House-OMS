@@ -12,6 +12,8 @@ import PosQuickCustomItemModal from '../components/pos/PosQuickCustomItemModal';
 import PosShortcutsModal from '../components/pos/PosShortcutsModal';
 import PosBenefitQrModal from '../components/pos/PosBenefitQrModal';
 import PosKitchenBundlesModal from '../components/pos/PosKitchenBundlesModal';
+import { AiQuotationGeneratorModal } from '../components/ai/AiQuotationGeneratorModal';
+import { getPosCrossSellSuggestions } from '../lib/aiService';
 import {
   playScanBeep,
   playSuccessChime,
@@ -103,6 +105,7 @@ const PosScreen: React.FC = () => {
   const [isShiftSummaryModalOpen, setIsShiftSummaryModalOpen] = useState(false);
   const [isCustomItemModalOpen, setIsCustomItemModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [isAiQuotationModalOpen, setIsAiQuotationModalOpen] = useState(false);
 
   // Completed Order & Receipts
   const [orderToPrintThermal, setOrderToPrintThermal] = useState<{
@@ -226,6 +229,15 @@ const PosScreen: React.FC = () => {
     if (paymentMethod !== 'Cash' || parsedCashTendered <= 0) return 0;
     return Math.max(0, parsedCashTendered - total);
   }, [paymentMethod, parsedCashTendered, total]);
+
+  // Smart cross-sell product suggestions based on cart contents
+  const crossSellSuggestions = useMemo(() => {
+    if (cartItems.length === 0) return [];
+    return getPosCrossSellSuggestions(
+      cartItems.map(it => ({ productId: it.product.id, name: it.product.name, quantity: it.quantity })),
+      products
+    );
+  }, [cartItems, products]);
 
   // Cart helper functions
   const addToCart = (product: Product, qtyToAdd = 1) => {
@@ -779,6 +791,18 @@ const PosScreen: React.FC = () => {
               <Package className="w-3.5 h-3.5" />
               <span className="hidden md:inline">
                 {language === 'ar' ? 'باقات المطابخ' : 'Bundles'}
+              </span>
+            </button>
+
+            {/* Smart AI Quotation & Voice Cart Generator */}
+            <button
+              onClick={() => setIsAiQuotationModalOpen(true)}
+              className="px-2.5 py-1.5 bg-gradient-to-r from-purple-600/15 to-amber-500/15 hover:from-purple-600/25 hover:to-amber-500/25 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-purple-500/30 shadow-2xs group"
+              title={language === 'ar' ? 'توليد فاتورة وعرض سعر ذكي بالذكاء الاصطناعي (كتابة أو صوت)' : 'Smart AI Quotation / Cart Generator'}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
+              <span className="hidden md:inline font-black">
+                {language === 'ar' ? 'توليد ذكي ✨' : 'AI Order ✨'}
               </span>
             </button>
 
@@ -1344,54 +1368,75 @@ const PosScreen: React.FC = () => {
           )}
         </div>
 
-        {/* Pricing, Discounts, Payment & Checkout Panel */}
-        <div className="p-2 sm:p-2.5 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-          {/* Discount Controls */}
-          <div className="p-1.5 px-2 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 space-y-1 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-[10px] text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <Percent className="w-3 h-3 text-amber-500" />
-                {language === 'ar' ? 'الخصم الترويجي' : 'Discount'}
+        {/* Real-time AI Cross-Selling Suggestions Strip */}
+        {crossSellSuggestions.length > 0 && (
+          <div className="px-2 py-1 bg-amber-500/10 dark:bg-amber-500/15 border-t border-b border-amber-500/20 flex items-center gap-1.5 overflow-x-auto text-[10px] hidescrollbar shrink-0">
+            <span className="shrink-0 font-bold text-amber-700 dark:text-amber-300 flex items-center gap-0.5">
+              <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
+              <span>{language === 'ar' ? 'اقتراحات إضافية:' : 'Suggested Add-ons:'}</span>
+            </span>
+            {crossSellSuggestions.slice(0, 3).map(prod => (
+              <button
+                key={prod.id}
+                type="button"
+                onClick={() => addToCart(prod)}
+                className="shrink-0 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-amber-300/70 dark:border-amber-700/80 text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition cursor-pointer shadow-2xs active:scale-95"
+                title={prod.name}
+              >
+                <span className="truncate max-w-[110px]">{prod.name}</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">+{formatCurrency(prod.salePrice)}</span>
+                <Plus className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Pricing, Discounts, Payment & Checkout Panel (Compact Optimized) */}
+        <div className="p-1.5 sm:p-2 bg-slate-50/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 space-y-1 text-xs">
+          {/* Discount Controls Compact */}
+          <div className="p-1 px-1.5 rounded-lg bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between gap-1 shadow-2xs">
+            <div className="flex items-center gap-1 shrink-0">
+              <Percent className="w-3 h-3 text-amber-500" />
+              <span className="font-bold text-[10px] text-slate-700 dark:text-slate-300">
+                {language === 'ar' ? 'الخصم' : 'Discount'}
               </span>
-              <div className="flex items-center gap-1">
-                <div className="inline-flex rounded-md bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
-                  <button
-                    type="button"
-                    onClick={() => setDiscountType('percent')}
-                    className={`px-1.5 py-0.2 rounded text-[9px] font-black transition-colors ${
-                      discountType === 'percent'
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    %
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDiscountType('fixed')}
-                    className={`px-1.5 py-0.2 rounded text-[9px] font-black transition-colors ${
-                      discountType === 'fixed'
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    BHD
-                  </button>
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  step={discountType === 'percent' ? '1' : '0.1'}
-                  value={discountValue || ''}
-                  onChange={e => setDiscountValue(parseFloat(e.target.value) || 0)}
-                  placeholder="0"
-                  className="w-14 px-1.5 py-0.5 text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-[11px] font-black outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900 dark:text-white"
-                />
+              <div className="inline-flex rounded bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setDiscountType('percent')}
+                  className={`px-1 py-0.2 rounded text-[8.5px] font-black transition-colors ${
+                    discountType === 'percent'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  %
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDiscountType('fixed')}
+                  className={`px-1 py-0.2 rounded text-[8.5px] font-black transition-colors ${
+                    discountType === 'fixed'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  BHD
+                </button>
               </div>
+              <input
+                type="number"
+                min="0"
+                step={discountType === 'percent' ? '1' : '0.1'}
+                value={discountValue || ''}
+                onChange={e => setDiscountValue(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+                className="w-12 px-1 py-0.5 text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-black outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900 dark:text-white"
+              />
             </div>
 
             {/* Quick Discount Presets */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {[5, 10, 15, 20].map(pct => (
                 <button
                   key={pct}
@@ -1400,7 +1445,7 @@ const PosScreen: React.FC = () => {
                     setDiscountType('percent');
                     setDiscountValue(pct);
                   }}
-                  className={`flex-1 py-0.5 rounded text-[9px] font-black transition-all ${
+                  className={`px-1.5 py-0.5 rounded text-[8.5px] font-black transition-all ${
                     discountType === 'percent' && discountValue === pct
                       ? 'bg-amber-500 text-slate-950 font-black shadow-xs ring-1 ring-amber-400'
                       : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -1413,7 +1458,7 @@ const PosScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDiscountValue(0)}
-                  className="px-1.5 py-0.5 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                  className="px-1 py-0.5 rounded text-[8.5px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                 >
                   {language === 'ar' ? 'إلغاء' : 'Reset'}
                 </button>
@@ -1421,52 +1466,47 @@ const PosScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Payment Method Selector */}
-          <div className="space-y-1">
-            <span className="font-bold text-[10px] text-slate-600 dark:text-slate-400 block">
-              {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
-            </span>
-            <div className="grid grid-cols-4 gap-1">
-              {[
-                { id: 'Cash', label: language === 'ar' ? 'نقداً (كاش)' : 'Cash', icon: Banknote },
-                { id: 'Card', label: language === 'ar' ? 'بطاقة' : 'Card', icon: CreditCard },
-                { id: 'BenefitPay', label: 'بنفت بي', icon: QrCode },
-                { id: 'Split', label: language === 'ar' ? 'دفع مزدوج' : 'Split', icon: Layers },
-              ].map(method => {
-                const Icon = method.icon;
-                const isSelected = paymentMethod === method.id;
-                return (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() => setPaymentMethod(method.id as any)}
-                    className={`py-1.5 px-1 rounded-lg border font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-2xs ring-1 ring-primary/30'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750'
-                    }`}
-                  >
-                    <Icon className="w-3 h-3 flex-shrink-0" />
-                    <span className="text-[10px] truncate">{method.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* Payment Method Selector Compact */}
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              { id: 'Cash', label: language === 'ar' ? 'نقداً (كاش)' : 'Cash', icon: Banknote },
+              { id: 'Card', label: language === 'ar' ? 'بطاقة' : 'Card', icon: CreditCard },
+              { id: 'BenefitPay', label: 'بنفت بي', icon: QrCode },
+              { id: 'Split', label: language === 'ar' ? 'دفع مزدوج' : 'Split', icon: Layers },
+            ].map(method => {
+              const Icon = method.icon;
+              const isSelected = paymentMethod === method.id;
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => setPaymentMethod(method.id as any)}
+                  className={`py-1 px-1 rounded-lg border font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-2xs ring-1 ring-primary/30'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750'
+                  }`}
+                >
+                  <Icon className="w-3 h-3 flex-shrink-0" />
+                  <span className="text-[9.5px] truncate">{method.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* BenefitPay Reference Number & QR Button */}
           {paymentMethod === 'BenefitPay' && (
-            <div className="p-2.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-1.5">
+            <div className="p-1.5 px-2 rounded-xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-rose-900 dark:text-rose-300">
+                <label className="text-[10px] font-bold text-rose-900 dark:text-rose-300">
                   {language === 'ar' ? 'رقم عملية بنفت بي المرجعي *' : 'BenefitPay Reference No. *'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowBenefitQrModal(true)}
-                  className="text-rose-600 hover:text-rose-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-rose-200 dark:border-rose-800 text-[10px] font-black flex items-center gap-1 cursor-pointer shadow-xs"
+                  className="text-rose-600 hover:text-rose-700 bg-white dark:bg-slate-800 px-1.5 py-0.2 rounded-md border border-rose-200 dark:border-rose-800 text-[9px] font-black flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <QrCode className="w-3 h-3" />
+                  <QrCode className="w-2.5 h-2.5" />
                   <span>{language === 'ar' ? 'رمز QR' : 'Show QR'}</span>
                 </button>
               </div>
@@ -1476,22 +1516,22 @@ const PosScreen: React.FC = () => {
                 value={benefitPayRefPos}
                 onChange={e => setBenefitPayRefPos(e.target.value)}
                 placeholder="e.g. 987654321"
-                className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-800/80 rounded-xl text-xs focus:ring-2 focus:ring-rose-500/30 outline-none font-mono font-bold"
+                className="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-800/80 rounded-lg text-xs focus:ring-1 focus:ring-rose-500/30 outline-none font-mono font-bold"
               />
             </div>
           )}
 
           {/* Split Payment Details */}
           {paymentMethod === 'Split' && (
-            <div className="p-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 text-xs">
-              <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+            <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                 <span>{language === 'ar' ? 'تفاصيل الدفع المزدوج' : 'Split Payment'}</span>
                 <span className="font-mono text-primary font-black">{formatCurrency(total)}</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                  <label className="text-[9px] font-bold text-slate-500 block mb-0.5">
                     {language === 'ar' ? 'المبلغ نقداً (Cash)' : 'Cash Amount'}
                   </label>
                   <input
@@ -1500,18 +1540,18 @@ const PosScreen: React.FC = () => {
                     value={splitCashAmount}
                     onChange={e => setSplitCashAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                  <label className="text-[9px] font-bold text-slate-500 block mb-0.5">
                     {language === 'ar' ? 'طريقة سداد المتبقي' : 'Remaining Method'}
                   </label>
                   <select
                     value={splitElectronicMethod}
                     onChange={e => setSplitElectronicMethod(e.target.value as any)}
-                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold outline-none cursor-pointer"
+                    className="w-full px-1.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold outline-none cursor-pointer"
                   >
                     <option value="BenefitPay">BenefitPay</option>
                     <option value="Card">{language === 'ar' ? 'بطاقة بنكية' : 'Card'}</option>
@@ -1519,46 +1559,21 @@ const PosScreen: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px]">
+              <div className="p-1 px-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-[10px]">
                 <span className="text-slate-500 font-bold">{language === 'ar' ? 'المتبقي للسداد الإلكتروني:' : 'Electronic Remaining:'}</span>
                 <span className="font-black font-mono text-rose-600 dark:text-rose-400">
                   {formatCurrency(Math.max(0, total - (parseFloat(splitCashAmount) || 0)))}
                 </span>
               </div>
-
-              {splitElectronicMethod === 'BenefitPay' && (
-                <div className="space-y-1 pt-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-slate-500">
-                      {language === 'ar' ? 'رقم عملية بنفت بي' : 'BenefitPay Ref'}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowBenefitQrModal(true)}
-                      className="text-rose-500 hover:text-rose-600 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <QrCode className="w-3 h-3" />
-                      <span>{language === 'ar' ? 'رمز QR' : 'QR Code'}</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    value={benefitPayRefPos}
-                    onChange={e => setBenefitPayRefPos(e.target.value)}
-                    placeholder="Ref #"
-                    className="w-full px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono outline-none"
-                  />
-                </div>
-              )}
             </div>
           )}
 
-          {/* Cash Quick Tender & Change Calculator */}
+          {/* Cash Quick Tender & Change Calculator Compact */}
           {paymentMethod === 'Cash' && total > 0 && (
-            <div className="p-1.5 px-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60 space-y-1 shadow-2xs">
+            <div className="p-1 px-1.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60 space-y-0.5 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-emerald-900 dark:text-emerald-200">
-                  {language === 'ar' ? 'المبلغ المستلم من العميل' : 'Cash Tendered'}
+                <span className="text-[9.5px] font-bold text-emerald-900 dark:text-emerald-200">
+                  {language === 'ar' ? 'المبلغ المستلم' : 'Cash Tendered'}
                 </span>
                 <input
                   type="number"
@@ -1566,16 +1581,16 @@ const PosScreen: React.FC = () => {
                   value={cashTendered}
                   onChange={e => setCashTendered(e.target.value)}
                   placeholder={total.toFixed(3)}
-                  className="w-20 px-1.5 py-0.5 text-right bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-md text-[11px] font-black outline-none text-emerald-950 dark:text-emerald-200 font-mono"
+                  className="w-16 px-1 py-0.2 text-right bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded text-[10px] font-black outline-none text-emerald-950 dark:text-emerald-200 font-mono"
                 />
               </div>
 
               {/* Quick Cash Buttons */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 <button
                   type="button"
                   onClick={() => setCashTendered(total.toFixed(3))}
-                  className="flex-1 py-0.5 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-md text-[9px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
+                  className="flex-1 py-0.5 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded text-[8.5px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
                 >
                   {language === 'ar' ? 'بالضبط' : 'Exact'}
                 </button>
@@ -1584,7 +1599,7 @@ const PosScreen: React.FC = () => {
                     key={val}
                     type="button"
                     onClick={() => setCashTendered(val.toString())}
-                    className="flex-1 py-0.5 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-md text-[9px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
+                    className="flex-1 py-0.5 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded text-[8.5px] font-black border border-emerald-200 dark:border-emerald-800 transition-colors"
                   >
                     {val}
                   </button>
@@ -1593,11 +1608,11 @@ const PosScreen: React.FC = () => {
 
               {/* Change Returned Highlight */}
               {parsedCashTendered > 0 && (
-                <div className="pt-1 border-t border-emerald-200/80 dark:border-emerald-900/60 flex items-center justify-between text-[11px] font-bold">
+                <div className="pt-0.5 border-t border-emerald-200/80 dark:border-emerald-900/60 flex items-center justify-between text-[10px] font-bold">
                   <span className="text-emerald-900 dark:text-emerald-300">
                     {language === 'ar' ? 'المتبقي للعميل (الباقي):' : 'Change Due:'}
                   </span>
-                  <span className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-400">
+                  <span className="text-xs font-black font-mono text-emerald-700 dark:text-emerald-400">
                     {formatCurrency(changeDue)}
                   </span>
                 </div>
@@ -1605,8 +1620,8 @@ const PosScreen: React.FC = () => {
             </div>
           )}
 
-          {/* Totals Summary */}
-          <div className="space-y-1 pt-1 border-t border-slate-200 dark:border-slate-800 text-[11px]">
+          {/* Totals Summary Compact */}
+          <div className="space-y-0.5 pt-0.5 border-t border-slate-200 dark:border-slate-800 text-[10px]">
             <div className="flex justify-between text-slate-500 dark:text-slate-400">
               <span>{language === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{formatCurrency(subtotal)}</span>
@@ -1631,7 +1646,7 @@ const PosScreen: React.FC = () => {
                   onChange={e => setIsVatEnabled(e.target.checked)}
                   className="rounded text-primary focus:ring-primary w-3 h-3 cursor-pointer"
                 />
-                <label htmlFor="vat-pos-toggle" className="cursor-pointer font-medium text-[11px]">
+                <label htmlFor="vat-pos-toggle" className="cursor-pointer font-medium text-[10px]">
                   {language === 'ar' ? 'ضريبة القيمة المضافة (10%)' : 'VAT (10%)'}
                 </label>
               </span>
@@ -1645,29 +1660,29 @@ const PosScreen: React.FC = () => {
               </div>
             )}
 
-            {/* Grand Total Luxury Banner */}
-            <div className="p-2 px-3 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white border border-slate-800 shadow-xs flex items-center justify-between">
+            {/* Grand Total Luxury Banner Compact */}
+            <div className="p-1.5 px-2 rounded-lg bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white border border-slate-800 shadow-2xs flex items-center justify-between">
               <div>
-                <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider block leading-tight">
+                <span className="text-[8.5px] text-amber-400 font-bold uppercase tracking-wider block leading-tight">
                   {language === 'ar' ? 'المبلغ النهائي المطلوب' : 'Total Amount Due'}
                 </span>
-                <span className="text-[10px] font-medium text-slate-300">
+                <span className="text-[9.5px] font-medium text-slate-300">
                   {cartItems.reduce((acc, it) => acc + it.quantity, 0)} {language === 'ar' ? 'قطع شاملة الضريبة' : 'items incl. VAT'}
                 </span>
               </div>
               <div className="text-right rtl:text-left">
-                <span className="text-xl font-black font-mono text-amber-400 tracking-tight leading-none">
+                <span className="text-lg font-black font-mono text-amber-400 tracking-tight leading-none">
                   {formatCurrency(total)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Pay Button */}
+          {/* Pay Button Compact */}
           <button
             onClick={handleCheckout}
             disabled={cartItems.length === 0 || isProcessing}
-            className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 text-white rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-[0.99] flex items-center justify-between cursor-pointer disabled:cursor-not-allowed disabled:shadow-none"
+            className="w-full py-2 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 text-white rounded-lg font-black text-xs sm:text-sm transition-all shadow-sm shadow-emerald-600/20 hover:shadow-md hover:shadow-emerald-600/30 active:scale-[0.99] flex items-center justify-between cursor-pointer disabled:cursor-not-allowed disabled:shadow-none"
           >
             {isProcessing ? (
               <div className="w-full flex items-center justify-center gap-2">
@@ -1677,14 +1692,14 @@ const PosScreen: React.FC = () => {
             ) : (
               <>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
-                    <Check className="w-3.5 h-3.5 text-white" />
+                  <div className="w-4 h-4 rounded bg-white/20 flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
                   </div>
                   <span>{language === 'ar' ? 'إتمام البيع والدفع' : 'Complete Sale & Pay'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-black text-sm sm:text-base">{formatCurrency(total)}</span>
-                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-white/20 text-white/90">F10</span>
+                  <span className="font-mono font-black text-sm">{formatCurrency(total)}</span>
+                  <span className="text-[8.5px] font-mono px-1 py-0.2 rounded bg-white/20 text-white/90">F10</span>
                 </div>
               </>
             )}
@@ -1836,6 +1851,40 @@ const PosScreen: React.FC = () => {
           onClose={() => setIsBundlesModalOpen(false)}
         />
       )}
+
+      {/* 11. Smart AI Quotation & Cart Generator Modal */}
+      <AiQuotationGeneratorModal
+        isOpen={isAiQuotationModalOpen}
+        onClose={() => setIsAiQuotationModalOpen(false)}
+        onApplyToCart={(items, custName) => {
+          items.forEach(it => {
+            const matched = products.find(p => p.id === it.productId || p.name.toLowerCase() === it.name.toLowerCase());
+            if (matched) {
+              for (let i = 0; i < it.quantity; i++) addToCart(matched);
+            } else {
+              const dummyProduct: Product = {
+                id: it.productId || `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                name: it.name,
+                salePrice: it.price,
+                purchasePrice: it.price * 0.7,
+                stock: 99,
+                lowStockThreshold: 5,
+                status: 'Active',
+                sku: 'AI-GEN',
+                barcode: '',
+                category: 'Kitchen'
+              };
+              for (let i = 0; i < it.quantity; i++) addToCart(dummyProduct);
+            }
+          });
+          if (custName) {
+            const cust = customers.find(c => c.name.toLowerCase().includes(custName.toLowerCase()));
+            if (cust) setSelectedCustomer(cust);
+          }
+          playSuccessChime();
+          setIsAiQuotationModalOpen(false);
+        }}
+      />
 
       {/* Dynamic Toast Feedback */}
       <AnimatePresence>

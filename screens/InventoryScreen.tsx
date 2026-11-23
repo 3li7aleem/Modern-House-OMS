@@ -33,8 +33,10 @@ import {
   PlusCircle,
   MinusCircle,
   Database,
-  ShoppingCart
+  ShoppingCart,
+  Sparkles
 } from 'lucide-react';
+import { calculateInventoryForecasts } from '../lib/aiService';
 import { SmartReorderModal } from '../components/inventory/SmartReorderModal';
 import ProductDetailModal from '../components/inventory/ProductDetailModal';
 import ProductQrCode from '../components/inventory/ProductQrCode';
@@ -127,8 +129,13 @@ export const InventoryScreen: React.FC = () => {
   const isAr = language === 'ar';
 
   // Navigation and Modals state
-  const [activeTab, setActiveTab] = useState<'products' | 'analytics' | 'expiringWarranties'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'analytics' | 'expiringWarranties' | 'forecasting'>('products');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+  // AI Inventory Predictive Forecasting
+  const inventoryForecasts = useMemo(() => {
+    return calculateInventoryForecasts(products, orders);
+  }, [products, orders]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedProductForQr, setSelectedProductForQr] = useState<Product | null>(null);
   const [selectedProductForQuickStock, setSelectedProductForQuickStock] = useState<Product | null>(null);
@@ -798,6 +805,21 @@ export const InventoryScreen: React.FC = () => {
                 {expiringWarranties.length}
               </span>
             )}
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('forecasting')} 
+            className={`py-3 px-1 border-b-2 font-bold text-xs sm:text-sm flex items-center gap-2 transition ${
+              activeTab === 'forecasting'
+                ? 'border-purple-600 text-purple-700 dark:text-purple-300'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-purple-500 animate-pulse" />
+            <span>{isAr ? 'التنبؤ الذكي بالنفاد (AI)' : 'AI Run-out Forecasting'}</span>
+            <span className="px-2 py-0.5 text-[10px] rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-black">
+              AI ✨
+            </span>
           </button>
         </nav>
       </div>
@@ -1506,6 +1528,131 @@ export const InventoryScreen: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 4: AI Inventory Run-out Forecasting */}
+      {activeTab === 'forecasting' && (
+        <div className="space-y-6">
+          {/* Summary KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 p-4 rounded-2xl shadow-2xs">
+              <div className="flex items-center justify-between text-rose-800 dark:text-rose-300">
+                <span className="text-xs font-bold">{isAr ? 'أصناف حرجة توشك على النفاد (خلال 7 أيام)' : 'Critical Items (< 7 Days)'}</span>
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
+              </div>
+              <span className="text-2xl font-black font-mono text-rose-700 dark:text-rose-300 block mt-2">
+                {inventoryForecasts.filter(f => f.urgency === 'حرجة (خلال أسبوع)').length}
+              </span>
+              <span className="text-[10px] text-rose-600 dark:text-rose-400 mt-1 block font-medium">
+                {isAr ? 'يتطلب إصدار أمر شراء عاجل فوراً' : 'Urgent purchase order required'}
+              </span>
+            </div>
+
+            <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-4 rounded-2xl shadow-2xs">
+              <div className="flex items-center justify-between text-amber-800 dark:text-amber-300">
+                <span className="text-xs font-bold">{isAr ? 'أصناف متوسطة الأولوية (خلال 30 يوم)' : 'Medium Priority (< 30 Days)'}</span>
+                <Clock className="w-4 h-4 text-amber-600" />
+              </div>
+              <span className="text-2xl font-black font-mono text-amber-700 dark:text-amber-300 block mt-2">
+                {inventoryForecasts.filter(f => f.urgency === 'متوسطة (خلال شهر)').length}
+              </span>
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 block font-medium">
+                {isAr ? 'يُنصح بجدولة التوريد مع الموردين' : 'Schedule reorders with vendors'}
+              </span>
+            </div>
+
+            <div className="bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 p-4 rounded-2xl shadow-2xs">
+              <div className="flex items-center justify-between text-purple-800 dark:text-purple-300">
+                <span className="text-xs font-bold">{isAr ? 'إجمالي الكميات المقترحة للتوريد' : 'Recommended Reorder Units'}</span>
+                <Sparkles className="w-4 h-4 text-purple-600" />
+              </div>
+              <span className="text-2xl font-black font-mono text-purple-700 dark:text-purple-300 block mt-2">
+                {inventoryForecasts.reduce((acc, f) => acc + f.suggestedReorderQuantity, 0)} {isAr ? 'قطعة' : 'units'}
+              </span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 mt-1 block font-medium">
+                {isAr ? 'محسوبة وفق معدل حركة المبيعات الفعلية' : 'Based on real sales velocity'}
+              </span>
+            </div>
+          </div>
+
+          {/* Forecasts Table */}
+          <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+              <div>
+                <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <span>{isAr ? 'جدول التنبؤ الذكي بمواعيد نفاد المخزون وإعادة الطلب' : 'AI Stockout & Reorder Forecast Schedule'}</span>
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {isAr ? 'خوارزمية الذكاء الاصطناعي تحلل سرعة بيع كل صنف (60 يوماً) وتتوقع تاريخ النفاد التقديري' : 'AI algorithm models product burn rate over 60 days to predict exact stockout dates'}
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left rtl:text-right">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700">
+                    <th className="p-3.5">{isAr ? 'المنتج' : 'Product'}</th>
+                    <th className="p-3.5 text-center">{isAr ? 'الرصيد الحالي' : 'Stock'}</th>
+                    <th className="p-3.5 text-center">{isAr ? 'معدل البيع اليومي' : 'Daily Velocity'}</th>
+                    <th className="p-3.5 text-center">{isAr ? 'الأيام المتبقية' : 'Days Remaining'}</th>
+                    <th className="p-3.5 text-center">{isAr ? 'تاريخ النفاد المتوقع' : 'Estimated Run-out'}</th>
+                    <th className="p-3.5 text-center">{isAr ? 'درجة الخطورة' : 'Urgency'}</th>
+                    <th className="p-3.5 text-center">{isAr ? 'الكمية المقترحة للطلب' : 'Suggested Reorder'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
+                  {inventoryForecasts.map((f, idx) => (
+                    <tr key={f.product.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-750 transition-colors">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900 dark:text-white">{f.product.name}</div>
+                        <div className="text-[10px] font-mono text-slate-400">{f.product.sku || f.product.category}</div>
+                      </td>
+                      <td className="p-3.5 text-center font-mono font-bold">
+                        <span className={f.product.stock <= 5 ? 'text-rose-600' : 'text-slate-800 dark:text-slate-200'}>
+                          {f.product.stock}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center font-mono text-slate-600 dark:text-slate-300">
+                        {f.dailySalesVelocity.toFixed(2)} / {isAr ? 'يوم' : 'day'}
+                      </td>
+                      <td className="p-3.5 text-center font-mono font-bold">
+                        <span className={f.daysRemaining <= 7 ? 'text-rose-600 font-black' : f.daysRemaining <= 30 ? 'text-amber-600' : 'text-slate-600 dark:text-slate-300'}>
+                          {f.daysRemaining > 999 ? '999+' : `${f.daysRemaining} ${isAr ? 'يوم' : 'days'}`}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                        {f.estimatedRunOutDate}
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <span className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold ${
+                          f.urgency === 'حرجة (خلال أسبوع)'
+                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                            : f.urgency === 'متوسطة (خلال شهر)'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                        }`}>
+                          {f.urgency}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center font-mono font-black text-purple-700 dark:text-purple-300">
+                        +{f.suggestedReorderQuantity} {isAr ? 'قطعة' : 'units'}
+                      </td>
+                    </tr>
+                  ))}
+                  {inventoryForecasts.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="text-center py-10 text-slate-400">
+                        {isAr ? 'لا توجد بيانات حركة مبيعات كافية لاحتساب التنبؤ بعد.' : 'No sales velocity data yet.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

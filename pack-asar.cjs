@@ -7,9 +7,14 @@ if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true })
 fs.mkdirSync(staging, { recursive: true });
 
 const devSrc = 'C:/Users/7aleem/Desktop/Modern House OMS/Modern House OMS Development/src/desktop';
-const files = ['main.cjs', 'preload.cjs', 'database.cjs', 'installation.cjs', 'backups.cjs', 'server.cjs', 'package.json'];
+const files = ['main.cjs', 'preload.cjs', 'database.cjs', 'installation.cjs', 'backups.cjs', 'server.cjs', 'cloudSync.cjs', 'package.json'];
 for (const f of files) {
   fs.copyFileSync(path.join(devSrc, f), path.join(staging, f));
+}
+
+const firebaseConfigSrc = 'C:/Users/7aleem/Desktop/Modern House OMS/Modern House OMS Development/firebase-applet-config.json';
+if (fs.existsSync(firebaseConfigSrc)) {
+  fs.copyFileSync(firebaseConfigSrc, path.join(staging, 'firebase-applet-config.json'));
 }
 
 fs.cpSync(path.join(devSrc, 'renderer'), path.join(staging, 'renderer'), { recursive: true });

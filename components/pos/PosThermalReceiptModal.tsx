@@ -46,7 +46,35 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
     }
     base = base.replace(/\/+$/, '');
     const invoiceNum = order.orderNumber || order.id;
-    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
+
+    // Compact order snapshot for instant zero-dependency QR code verification
+    let inlineData = '';
+    try {
+      const compact = {
+        orderNumber: invoiceNum,
+        date: order.date,
+        customerName: customer?.name || order.customerName || 'عميل نقدي',
+        customerPhone: customer?.phone || order.customerPhone || '',
+        items: (order.items || []).map(it => {
+          const prod = productMap.get(it.productId);
+          return {
+            name: prod?.name || it.name || 'صنف',
+            sku: prod?.sku || '',
+            price: it.price,
+            quantity: it.quantity
+          };
+        }),
+        subtotal: order.subtotal || order.total,
+        discount: order.discount || 0,
+        total: order.total,
+        paymentMethod: order.paymentMethod || 'Cash'
+      };
+      inlineData = btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+    } catch {}
+
+    const invoiceUrl = inlineData && inlineData.length < 1400
+      ? `${base}/?invoice=${encodeURIComponent(invoiceNum)}&d=${encodeURIComponent(inlineData)}`
+      : `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     // Use direct clickable URL so mobile camera scan opens digital receipt immediately
     QRCode.toDataURL(invoiceUrl, { 
@@ -91,7 +119,35 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
     }
     base = base.replace(/\/+$/, '');
     const invoiceNum = order.orderNumber || order.id;
-    const invoiceUrl = `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
+
+    // Compact order snapshot for instant zero-dependency QR code verification
+    let inlineData = '';
+    try {
+      const compact = {
+        orderNumber: invoiceNum,
+        date: order.date,
+        customerName: customer?.name || order.customerName || 'عميل نقدي',
+        customerPhone: customer?.phone || order.customerPhone || '',
+        items: (order.items || []).map(it => {
+          const prod = productMap.get(it.productId);
+          return {
+            name: prod?.name || it.name || 'صنف',
+            sku: prod?.sku || '',
+            price: it.price,
+            quantity: it.quantity
+          };
+        }),
+        subtotal: order.subtotal || order.total,
+        discount: order.discount || 0,
+        total: order.total,
+        paymentMethod: order.paymentMethod || 'Cash'
+      };
+      inlineData = btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+    } catch {}
+
+    const invoiceUrl = inlineData && inlineData.length < 1400
+      ? `${base}/?invoice=${encodeURIComponent(invoiceNum)}&d=${encodeURIComponent(inlineData)}`
+      : `${base}/?invoice=${encodeURIComponent(invoiceNum)}`;
 
     const message = language === 'ar'
       ? `مرحباً ${customer?.name || 'عزيزنا العميل'}،\nشكراً لتعاملك مع مودرن هاوس للتجارة!\n\n🧾 إيصال مبيعات #${order.orderNumber}:\n${itemsSummary}\n\n💰 الإجمالي: ${formatCurrency(order.total)}\n💳 طريقة الدفع: ${order.paymentMethod}\n📅 التاريخ: ${formatDate(order.date)}\n🔗 الرابط الرقمي: ${invoiceUrl}\n\nنتمنى لك يوماً سعيداً!`

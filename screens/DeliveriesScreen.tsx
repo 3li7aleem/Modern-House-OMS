@@ -8,6 +8,7 @@ import PrintDeliveryNoteModal from '../components/deliveries/PrintDeliveryModal'
 import CreateDeliveryModal from '../components/deliveries/CreateDeliveryModal';
 import DriversManagementModal from '../components/deliveries/DriversManagementModal';
 import BatchAssignDriverModal from '../components/deliveries/BatchAssignDriverModal';
+import AiDeliveryRouteModal from '../components/deliveries/AiDeliveryRouteModal';
 import {
   Truck,
   Plus,
@@ -85,6 +86,7 @@ const DeliveriesScreen: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDriversModalOpen, setIsDriversModalOpen] = useState(false);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
+  const [isAiRouteModalOpen, setIsAiRouteModalOpen] = useState(false);
 
   // Helper getters
   const getOrder = (orderId: string) => orders.find(s => s.id === orderId);
@@ -405,6 +407,16 @@ const DeliveriesScreen: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* AI Route Optimizer */}
+          <button
+            onClick={() => setIsAiRouteModalOpen(true)}
+            className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+            title="AI Route Planner"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span>{isAr ? 'المسار الذكي (AI)' : 'AI Route'}</span>
+          </button>
+
           {/* Export Manifest */}
           <button
             onClick={handleExportCSV}
@@ -1369,6 +1381,16 @@ const DeliveriesScreen: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 7. AI Route Optimization Modal */}
+      <AiDeliveryRouteModal
+        isOpen={isAiRouteModalOpen}
+        onClose={() => setIsAiRouteModalOpen(false)}
+        deliveries={deliveries}
+        orders={orders}
+        customers={customers}
+        drivers={drivers}
+      />
 
       <style>{`
         .hidescrollbar::-webkit-scrollbar {

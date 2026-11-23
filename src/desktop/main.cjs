@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { LocalDatabase } = require('./database.cjs');
 const { createInstallation } = require('./installation.cjs');
 const { createBackupManager } = require('./backups.cjs');
+const { syncOrderToFirestore, syncAllLocalOrders } = require('./cloudSync.cjs');
 let createTabletServer = null;
 try {
   ({ createTabletServer } = require('./server.cjs'));
@@ -156,6 +157,10 @@ if (locked) app.whenReady().then(async () => {
   activeUser = null;
   backups = createBackupManager({ directory: path.join(installation.dataDirectory, 'backups'), exportBackup: () => db.exportBackup(), onError: reportBackupError, intervalMs: smokeTest ? 200 : 15 * 60 * 1000 });
   backups.start();
+  if (!smokeTest) {
+    setTimeout(() => { syncAllLocalOrders(db).catch(() => {}); }, 4000);
+    setInterval(() => { syncAllLocalOrders(db).catch(() => {}); }, 5 * 60 * 1000);
+  }
   if (!smokeTest && typeof createTabletServer === 'function') {
     try {
       tabletServer = createTabletServer({
@@ -232,6 +237,7 @@ if (locked) app.whenReady().then(async () => {
       case 'saveOrder':
         result = db.saveOrder(collection, { ...id, userId: activeUser || 'local-admin' });
         changed = ['orders', 'products', 'notifications', 'deliveries', 'requests', 'quotations'];
+        if (result) syncOrderToFirestore(result).catch(() => {});
         break;
       case 'deleteOrder':
         result = db.deleteOrder(collection);

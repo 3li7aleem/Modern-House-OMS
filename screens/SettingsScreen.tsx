@@ -45,6 +45,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { sendWhatsAppMessage, cleanPhoneForWhatsApp, WhatsAppConfig, DEFAULT_WHATSAPP_CONFIG } from '../lib/whatsappService';
+import { getStoredAiConfig, saveStoredAiConfig, callGeminiApi, AiConfig } from '../lib/aiService';
 
 type PrintListItem = {
     product: Product;
@@ -63,9 +64,48 @@ const SettingsScreen: React.FC = () => {
   const { orders, deliveries, drivers, products, customers, expenses, suppliers, users, purchaseOrders, notifications, requests } = useAppContext();
   const { language } = useTranslation();
   const isAr = language === 'ar';
-  const [activeTab, setActiveTab] = useState<'invoice' | 'delivery' | 'barcode_printing' | 'data_management' | 'app_download' | 'voice_audio' | 'whatsapp_mcp'>('whatsapp_mcp');
+  const [activeTab, setActiveTab] = useState<'invoice' | 'delivery' | 'barcode_printing' | 'data_management' | 'app_download' | 'voice_audio' | 'whatsapp_mcp' | 'gemini_ai'>('whatsapp_mcp');
   const [isDeletingData, setIsDeletingData] = useState(false);
   const [isPlayingVoiceTest, setIsPlayingVoiceTest] = useState(false);
+
+  // Gemini AI Engine States
+  const [aiConfig, setAiConfig] = useState<AiConfig>(() => getStoredAiConfig());
+  const [showAiApiKey, setShowAiApiKey] = useState(false);
+  const [isTestingAi, setIsTestingAi] = useState(false);
+  const [aiTestResult, setAiTestResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [aiSavedSuccess, setAiSavedSuccess] = useState(false);
+
+  const handleSaveAiConfig = (updatedPartial?: Partial<AiConfig>) => {
+    const updated = saveStoredAiConfig(updatedPartial ? { ...aiConfig, ...updatedPartial } : aiConfig);
+    setAiConfig(updated);
+    setAiSavedSuccess(true);
+    setTimeout(() => setAiSavedSuccess(false), 3000);
+  };
+
+  const handleTestAiConnection = async () => {
+    setIsTestingAi(true);
+    setAiTestResult(null);
+    try {
+      if (!aiConfig.apiKey && !localStorage.getItem('settings:gemini_api_key')) {
+        throw new Error(isAr ? 'يرجى إدخال مفتاح Gemini API أولاً وحفظه.' : 'Please enter and save a Gemini API key first.');
+      }
+      const reply = await callGeminiApi(
+        'أنت مساعد الذكاء الاصطناعي لمؤسسة مودرن هاوس للتجارة في البحرين. رد بجملة ترحيبية واحدة فقط تؤكد اتصالك الناجح بالنظام.',
+        { model: aiConfig.model }
+      );
+      setAiTestResult({
+        type: 'success',
+        text: reply || (isAr ? 'تم الاتصال بنجاح بـ Google Gemini API!' : 'Successfully connected to Google Gemini API!')
+      });
+    } catch (err: any) {
+      setAiTestResult({
+        type: 'error',
+        text: err?.message || (isAr ? 'فشل الاتصال بـ Gemini API. تحقق من صلاحية المفتاح والاتصال بالإنترنت.' : 'Failed to connect to Gemini API.')
+      });
+    } finally {
+      setIsTestingAi(false);
+    }
+  };
 
   // WhatsApp & MCP States
   const [testPhone, setTestPhone] = useState('35965477');
@@ -317,6 +357,13 @@ const SettingsScreen: React.FC = () => {
               </button>
               <button onClick={() => setActiveTab('barcode_printing')} className={`${activeTab === 'barcode_printing' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                   {t('settings.qr_code_printing')}
+              </button>
+              <button 
+                onClick={() => setActiveTab('gemini_ai')} 
+                className={`${activeTab === 'gemini_ai' ? 'border-primary text-primary font-bold' : 'border-transparent text-text-secondary hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1.5`}
+              >
+                <Sparkles className="w-4 h-4 text-purple-500 animate-pulse" />
+                <span>{isAr ? 'محرك الذكاء الاصطناعي (Google Gemini)' : 'Gemini AI Engine'}</span>
               </button>
               <button 
                 onClick={() => setActiveTab('whatsapp_mcp')} 
@@ -1562,6 +1609,271 @@ const SettingsScreen: React.FC = () => {
 
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'gemini_ai' && (
+        <div className="mt-8 space-y-8 animate-fadeIn">
+          {/* Header Card */}
+          <div className="bg-gradient-to-r from-purple-950 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-700/40 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-amber-500/20">
+                  <Sparkles className="w-8 h-8" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-2xl font-black tracking-tight">محرك الذكاء الاصطناعي المركزي (Google Gemini)</h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                      مودرن هاوس للتجارة
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-indigo-200/90 mt-1 max-w-2xl leading-relaxed">
+                    منظومة متكاملة مدعومة بأحدث نماذج Google Gemini 2.5 Flash لتوليد عروض الأسعار، تشخيص أعطال الصيانة بالكاميرا، مسح فواتير الموردين، وتحسين سلاسل التوصيل لمناطق البحرين.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 flex items-center gap-2 transition backdrop-blur-xs"
+                >
+                  <ExternalLink className="w-4 h-4 text-amber-400" />
+                  <span>الحصول على مفتاح API مجاني</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuration Form Card */}
+          <div className="bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="border-b border-border dark:border-dark-border pb-4">
+              <h4 className="text-lg font-black text-text-primary dark:text-dark-text-primary flex items-center gap-2">
+                <Bot className="w-5 h-5 text-indigo-500" />
+                <span>إعدادات الاتصال بمفتاح Google Gemini API</span>
+              </h4>
+              <p className="text-xs text-text-secondary dark:text-dark-text-secondary mt-0.5">
+                يتم حفظ المفتاح بأمان في المتصفح وجهاز سطح المكتب، واستخدامه مباشرة للاتصال بخوادم Google REST API.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* API Key */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-text-secondary dark:text-dark-text-secondary mb-2">
+                  مفتاح Gemini API Key (سري وخاص بك)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAiApiKey ? 'text' : 'password'}
+                    value={aiConfig.apiKey}
+                    onChange={(e) => setAiConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                    placeholder="AIzaSy..."
+                    className="w-full px-4 py-3 pr-11 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none text-text-primary dark:text-dark-text-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAiApiKey(prev => !prev)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-text-secondary hover:text-text-primary"
+                  >
+                    {showAiApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Model Choice */}
+              <div>
+                <label className="block text-xs font-bold text-text-secondary dark:text-dark-text-secondary mb-2">
+                  نموذج الذكاء الاصطناعي (Model)
+                </label>
+                <select
+                  value={aiConfig.model}
+                  onChange={(e) => setAiConfig(prev => ({ ...prev, model: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none text-text-primary dark:text-dark-text-primary"
+                >
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (الأحدث، فائق السرعة والرؤية - موصى به)</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (سريع واقتصادي)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (للمهام والتحليلات المعقدة)</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (الإصدار القياسي المستقر)</option>
+                </select>
+              </div>
+
+              {/* Toggles */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-text-secondary dark:text-dark-text-secondary mb-2">
+                  خيارات التفعيل التلقائي
+                </label>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-border dark:border-dark-border">
+                  <div>
+                    <span className="text-xs font-bold block text-text-primary dark:text-dark-text-primary">
+                      تفعيل الذكاء الاصطناعي في المنظومة
+                    </span>
+                    <span className="text-[11px] text-text-secondary dark:text-dark-text-secondary">
+                      إتاحة أدوات الذكاء في نقاط البيع، الصيانة، المخزون، والتوصيل
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={aiConfig.enabled}
+                    onChange={(e) => setAiConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+                    className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-border dark:border-dark-border">
+                  <div>
+                    <span className="text-xs font-bold block text-text-primary dark:text-dark-text-primary">
+                      اقتراحات زيادة المبيعات التلقائية (POS Upsell)
+                    </span>
+                    <span className="text-[11px] text-text-secondary dark:text-dark-text-secondary">
+                      اقتراح الملحقات ومستلزمات التركيب فور إضافة منتج لسلة نقاط البيع
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={aiConfig.autoSuggestPos}
+                    onChange={(e) => setAiConfig(prev => ({ ...prev, autoSuggestPos: e.target.checked }))}
+                    className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Bar */}
+            <div className="pt-4 border-t border-border dark:border-dark-border flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAiConfig()}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs flex items-center gap-2 shadow-md transition active:scale-98 cursor-pointer"
+                >
+                  {aiSavedSuccess ? <Check className="w-4 h-4 text-emerald-950" /> : <Sparkles className="w-4 h-4" />}
+                  <span>{aiSavedSuccess ? 'تم حفظ الإعدادات بنجاح!' : 'حفظ إعدادات الذكاء الاصطناعي'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isTestingAi}
+                  onClick={handleTestAiConnection}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+                >
+                  {isTestingAi ? <RefreshCw className="w-4 h-4 animate-spin text-indigo-500" /> : <Zap className="w-4 h-4 text-indigo-500" />}
+                  <span>{isTestingAi ? 'جاري الفحص...' : 'اختبار الاتصال بـ Gemini'}</span>
+                </button>
+              </div>
+
+              {aiSavedSuccess && (
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>تم تفعيل التعديلات وتطبيقها فوراً على كل شاشات البرنامج.</span>
+                </span>
+              )}
+            </div>
+
+            {/* Test Connection Output */}
+            {aiTestResult && (
+              <div className={`p-4 rounded-2xl border text-xs leading-relaxed animate-fadeIn ${
+                aiTestResult.type === 'success'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                  : 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800 text-red-800 dark:text-red-200'
+              }`}>
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  {aiTestResult.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-red-500" />}
+                  <span>{aiTestResult.type === 'success' ? 'نتيجة الاختبار: الاتصال ناجح ومستقر' : 'نتيجة الاختبار: خطأ في الاتصال'}</span>
+                </div>
+                <p className="font-mono">{aiTestResult.text}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Catalog of Active AI Tools in Modern House OMS */}
+          <div className="bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+            <div>
+              <h4 className="text-lg font-black text-text-primary dark:text-dark-text-primary flex items-center gap-2">
+                <Layers className="w-5 h-5 text-amber-500" />
+                <span>دليل أدوات الذكاء الاصطناعي المدمجة بالبرنامج</span>
+              </h4>
+              <p className="text-xs text-text-secondary dark:text-dark-text-secondary mt-0.5">
+                جميع هذه الأدوات مدمجة حالياً وجاهزة للاستخدام بضغطة زر واحدة داخل مختلف شاشات التطبيق:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">🤖</span>
+                  <span>المساعد الإداري التنفيذي (Copilot)</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  متواجد في شريط الرأس العلوي بكل الشاشات، يجيب على استفسارات المبيعات والأرباح ومقارنة الفروع باللغة الطبيعية.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">🛒</span>
+                  <span>توليد عروض الأسعار والسلة بالصوت والنص</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  زر (توليد ذكي ✨) في شاشة الكاشير يتيح كتابة أو نطق طلب العميل ليقوم الذكاء الاصطناعي بتركيب السلة والخصم فوراً.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">💡</span>
+                  <span>اقتراحات البيع المتقاطع (POS Cross-Sell)</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  يحلل الأصناف الموجودة في السلة ويقترح إكسسوارات ومواد مكملة لزيادة متوسط قيمة الفاتورة بمجرد الضغط عليها.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">📷</span>
+                  <span>تشخيص أعطال الصيانة بالكاميرا (Vision)</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  زر (فحص العطل 📷) في قسم الصيانة، يقوم بتحليل صورة الجهاز وتحديد نوع العطل وقطع الغيار والتكلفة التقديرية.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">📄</span>
+                  <span>المسح الضوئي لفواتير الموردين (OCR)</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  زر (مسح الفاتورة 📷) في أوامر الشراء، يقرأ فاتورة المورد الورقية ويستخرج الأصناف والكميات والأسعار تلقائياً.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">📊</span>
+                  <span>التنبؤ بنفاد المخزون وإعادة الطلب</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  تبويب خاص في شاشة المخزون يحسب معدل الاستهلاك لآخر 60 يوماً ويحدد الأصناف المهددة بالنفاد وكميات الشراء الموصى بها.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-background dark:bg-dark-background border border-border dark:border-dark-border space-y-2 md:col-span-2 lg:col-span-3">
+                <div className="flex items-center gap-2 font-black text-sm text-text-primary dark:text-dark-text-primary">
+                  <span className="text-lg">🗺️</span>
+                  <span>الترتيب الذكي لمسار التوصيل والـ ETA لمناطق البحرين</span>
+                </div>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                  زر (المسار الذكي 🗺️) في مركز التوصيل، يجمع الطلبات حسب المحافظات البحرينية (الشمالية، العاصمة، المحرق، الجنوبية)، ويجدول مواعيد الوصول التقديرية مع إرسال إشعارات الواتساب للسائق والعميل بنقرة واحدة.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}

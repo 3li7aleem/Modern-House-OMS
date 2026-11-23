@@ -6,6 +6,7 @@ import { useAppContext } from '../../contexts/AppContext';
 import { Screen, AppNotification } from '../../types';
 import EditProfileModal from '../users/EditProfileModal';
 import { SystemHealthModal } from './SystemHealthModal';
+import { AiCopilotModal } from '../ai/AiCopilotModal';
 import { 
   Sun, 
   Moon, 
@@ -23,7 +24,9 @@ import {
   PanelRightClose,
   PanelRightOpen,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Sparkles,
+  Bot
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -41,6 +44,7 @@ const Header: React.FC = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+  const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileSearchVisible, setIsMobileSearchVisible] = useState(false);
 
@@ -143,13 +147,17 @@ const Header: React.FC = () => {
       <header className="flex items-center justify-between px-3 sm:px-6 py-0 h-16 sm:h-[72px] glass-header dark:glass-header z-20 relative shadow-xs">
         {/* Left side: Mobile Hamburger / Desktop Toggle + Title */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {/* Mobile hamburger menu */}
+          {/* Mobile menu toggle */}
           <button 
             onClick={toggleMobileMenu} 
-            className="md:hidden p-2 -ml-1 rtl:-ml-0 rtl:-mr-1 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none"
+            className="md:hidden p-2 -ml-1 rtl:-ml-0 rtl:-mr-1 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none cursor-pointer"
             aria-label="Toggle Navigation Menu"
           >
-            <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-5 h-4 flex flex-col justify-between items-start">
+              <span className="h-0.5 w-5 bg-slate-800 dark:bg-slate-200 rounded-full transition-all" />
+              <span className="h-0.5 w-3.5 bg-amber-500 rounded-full transition-all" />
+              <span className="h-0.5 w-5 bg-slate-800 dark:bg-slate-200 rounded-full transition-all" />
+            </div>
           </button>
 
           {/* Desktop sidebar collapse toggle */}
@@ -159,19 +167,11 @@ const Header: React.FC = () => {
             title={isSidebarOpen ? (isAr ? 'طي القائمة الجانبية' : 'Collapse Sidebar') : (isAr ? 'توسيع القائمة الجانبية' : 'Expand Sidebar')}
             aria-label="Toggle Sidebar"
           >
-            {isAr ? (
-              isSidebarOpen ? (
-                <PanelRightClose className="w-5 h-5 text-slate-700 dark:text-slate-200 transition-transform" />
-              ) : (
-                <PanelRightOpen className="w-5 h-5 text-amber-500 transition-transform" />
-              )
-            ) : (
-              isSidebarOpen ? (
-                <PanelLeftClose className="w-5 h-5 text-slate-700 dark:text-slate-200 transition-transform" />
-              ) : (
-                <PanelLeftOpen className="w-5 h-5 text-amber-500 transition-transform" />
-              )
-            )}
+            <div className="w-5 h-4 flex flex-col justify-between items-start">
+              <span className={`h-0.5 bg-slate-700 dark:bg-slate-200 rounded-full transition-all duration-300 ${isSidebarOpen ? 'w-5' : 'w-3'}`} />
+              <span className="h-0.5 w-3.5 bg-amber-500 rounded-full transition-all duration-300" />
+              <span className={`h-0.5 bg-slate-700 dark:bg-slate-200 rounded-full transition-all duration-300 ${isSidebarOpen ? 'w-3' : 'w-5'}`} />
+            </div>
           </button>
           
           <div className="flex flex-col min-w-0">
@@ -245,6 +245,19 @@ const Header: React.FC = () => {
         
         {/* Right side Actions (Mobile & Desktop) */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Executive AI Copilot Action Pill */}
+          <button
+            type="button"
+            onClick={() => setIsAiCopilotOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600/10 via-amber-500/10 to-purple-600/10 dark:from-purple-500/20 dark:to-amber-500/20 border border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-bold hover:border-purple-500/50 hover:shadow-xs transition select-none cursor-pointer group"
+            title={isAr ? 'المساعد التنفيذي الذكي (Gemini AI)' : 'Executive AI Copilot (Gemini)'}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
+            <span className="hidden sm:inline font-black bg-gradient-to-r from-purple-700 to-amber-600 dark:from-purple-300 dark:to-amber-400 bg-clip-text text-transparent">
+              {isAr ? 'المساعد الذكي ✨' : 'AI Copilot ✨'}
+            </span>
+          </button>
+
           {/* Live Sync Status Pill */}
           <div 
             onClick={() => setIsHealthModalOpen(true)}
@@ -524,6 +537,12 @@ const Header: React.FC = () => {
       {isHealthModalOpen && (
         <SystemHealthModal onClose={() => setIsHealthModalOpen(false)} />
       )}
+
+      {/* Executive AI Copilot Modal */}
+      <AiCopilotModal
+        isOpen={isAiCopilotOpen}
+        onClose={() => setIsAiCopilotOpen(false)}
+      />
     </>
   );
 };

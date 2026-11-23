@@ -6,11 +6,14 @@ import { useTranslation } from '../contexts/LanguageContext';
 import { PurchaseOrder } from '../types';
 import AddPurchaseOrderModal from '../components/purchaseorders/AddPurchaseOrderModal';
 import PurchaseOrderDetailModal from '../components/purchaseorders/PurchaseOrderDetailModal';
+import { AiInvoiceScannerModal } from '../components/ai/AiInvoiceScannerModal';
+import { Sparkles, Camera, Plus } from 'lucide-react';
 
 const PurchaseOrdersScreen: React.FC = () => {
     const { purchaseOrders, suppliers, addPurchaseOrder, receivePurchaseOrder } = useAppContext();
     const { t, formatDate, formatCurrency } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
     const [receivingPoId, setReceivingPoId] = useState<string | null>(null);
     const [selectedPo, setSelectedPo] = useState<PurchaseOrder | null>(null);
 
@@ -43,14 +46,25 @@ const PurchaseOrdersScreen: React.FC = () => {
 
     return (
         <div>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <h3 className="text-3xl font-medium text-text-primary dark:text-dark-text-primary">{t('purchaseOrders.title')}</h3>
-                <button 
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition"
-                >
-                    {t('purchaseOrders.new_po_button')}
-                </button>
+                <div className="flex items-center gap-2">
+                    <button 
+                        type="button"
+                        onClick={() => setIsAiScannerOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/15 via-amber-500/15 to-purple-600/15 hover:from-purple-600/25 hover:to-amber-500/25 text-purple-700 dark:text-purple-300 border border-purple-500/30 rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition cursor-pointer group"
+                    >
+                        <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
+                        <span>{isAr ? 'مسح فاتورة المورد (AI OCR) 📷' : 'Scan Vendor Invoice 📷'}</span>
+                    </button>
+                    <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary-hover transition text-xs sm:text-sm font-bold shadow cursor-pointer"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>{t('purchaseOrders.new_po_button')}</span>
+                    </button>
+                </div>
             </div>
 
             <div className="mt-8 bg-card shadow-lg rounded-lg overflow-hidden dark:bg-dark-card">
@@ -112,6 +126,35 @@ const PurchaseOrdersScreen: React.FC = () => {
                     onClose={() => setSelectedPo(null)}
                 />
             )}
+
+            {/* AI Vendor Invoice OCR Scanner Modal */}
+            <AiInvoiceScannerModal
+                isOpen={isAiScannerOpen}
+                onClose={() => setIsAiScannerOpen(false)}
+                onApplyPurchaseOrder={(parsedData) => {
+                    // Match supplier
+                    const foundSupplier = suppliers.find(s => 
+                        s.id === parsedData.supplierId || 
+                        (parsedData.supplierName && s.name.toLowerCase().includes(parsedData.supplierName.toLowerCase()))
+                    );
+
+                    const newPoPayload = {
+                        supplierId: foundSupplier ? foundSupplier.id : (suppliers[0]?.id || 'unknown'),
+                        date: parsedData.invoiceDate || new Date().toISOString(),
+                        items: parsedData.items.map(it => ({
+                            productId: it.productId || `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                            quantity: it.quantity || 1,
+                            purchasePrice: it.unitPrice || 0
+                        })),
+                        totalAmount: parsedData.totalAmount || 0,
+                        status: 'Pending' as const,
+                        notes: `تم التوليد التلقائي عبر الذكاء الاصطناعي (AI OCR) من فاتورة رقم: ${parsedData.invoiceNumber || 'N/A'}`
+                    };
+
+                    addPurchaseOrder(newPoPayload as any);
+                    setIsAiScannerOpen(false);
+                }}
+            />
         </div>
     );
 };

@@ -30,6 +30,8 @@ import { AddEditRepairModal } from '../components/maintenance/AddEditRepairModal
 import { RepairDetailsModal } from '../components/maintenance/RepairDetailsModal';
 import { MaintenanceKanban } from '../components/maintenance/MaintenanceKanban';
 import { printRepairInvoice } from '../components/maintenance/printRepairInvoice';
+import { AiMaintenanceDiagnoseModal } from '../components/ai/AiMaintenanceDiagnoseModal';
+import { Sparkles } from 'lucide-react';
 
 const MaintenanceScreen: React.FC = () => {
   const { customers, employees, repairs, deleteRepair, addRepair, updateRepair, updateRepairStatus } = useAppContext();
@@ -51,6 +53,7 @@ const MaintenanceScreen: React.FC = () => {
 
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedRepairForDetails, setSelectedRepairForDetails] = useState<RepairInvoice | null>(null);
+  const [isAiDiagnoseOpen, setIsAiDiagnoseOpen] = useState(false);
 
   // Filtered repairs
   const filteredRepairs = useMemo(() => {
@@ -212,6 +215,17 @@ const MaintenanceScreen: React.FC = () => {
               <span>{isAr ? 'لوحة كانبان' : 'Kanban'}</span>
             </button>
           </div>
+
+          {/* AI Photo Diagnosis Button */}
+          <button 
+            type="button"
+            onClick={() => setIsAiDiagnoseOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600/15 via-amber-500/15 to-purple-600/15 hover:from-purple-600/25 hover:to-amber-500/25 text-purple-700 dark:text-purple-300 border border-purple-500/30 rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer group"
+            title={isAr ? 'فحص وتشخيص العطل بصورة الكاميرا عبر الذكاء الاصطناعي' : 'AI Camera Diagnostic'}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
+            <span>{isAr ? 'فحص العطل بالذكاء الاصطناعي 📷' : 'AI Diagnosis 📷'}</span>
+          </button>
 
           {/* New Ticket Button */}
           <button 
@@ -632,6 +646,37 @@ const MaintenanceScreen: React.FC = () => {
         language={language}
         formatCurrency={formatCurrency}
         formatDate={formatDate}
+      />
+
+      {/* AI Photo Diagnosis Modal */}
+      <AiMaintenanceDiagnoseModal
+        isOpen={isAiDiagnoseOpen}
+        onClose={() => setIsAiDiagnoseOpen(false)}
+        onApplyDiagnosis={(diag) => {
+          setEditingRepair({
+            id: '',
+            repairNumber: '',
+            customerId: '',
+            deviceType: diag.deviceCategory || 'جهاز مطبخ',
+            damageDescription: `${diag.damageDescription}\n\nالإجراء الفني الموصى به: ${diag.recommendedAction}`,
+            parts: diag.suggestedParts.map((p, idx) => ({
+              id: `part-${idx}`,
+              productId: p.productId,
+              name: p.name,
+              quantity: 1,
+              cost: p.estimatedCost
+            })),
+            laborCost: diag.estimatedCost,
+            totalAmount: diag.estimatedCost,
+            paidAmount: 0,
+            status: 'Pending',
+            priority: diag.severity === 'عالي' ? 'High' : diag.severity === 'متوسط' ? 'Normal' : 'Normal',
+            warrantyStatus: 'Out of Warranty',
+            date: new Date().toISOString()
+          } as any);
+          setIsAddEditModalOpen(true);
+          setIsAiDiagnoseOpen(false);
+        }}
       />
 
     </div>

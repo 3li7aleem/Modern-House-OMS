@@ -2,6 +2,13 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 
+let syncOrderToFirestore = null;
+try {
+  ({ syncOrderToFirestore } = require('./cloudSync.cjs'));
+} catch (e) {
+  console.warn('Optional cloud sync module not loaded in server.cjs:', e.message);
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -432,6 +439,7 @@ function createTabletServer({ database, rendererDir, onDataChanged, port = 3000 
             case 'saveOrder':
               result = db.saveOrder(collection, { ...id, userId: 'tablet' });
               changed = ['orders', 'products', 'notifications', 'deliveries', 'requests', 'quotations'];
+              if (result && syncOrderToFirestore) syncOrderToFirestore(result).catch(() => {});
               break;
             case 'deleteOrder':
               result = db.deleteOrder(collection);

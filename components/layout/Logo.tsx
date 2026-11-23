@@ -12,7 +12,7 @@ export const Logo: React.FC<LogoProps> = ({
   className = "h-12 w-auto", 
   showText = true,
   textColorClass = "text-text-primary dark:text-dark-text-primary",
-  textSizeClass = "text-[13px] sm:text-[14px] font-black tracking-[0.14em]"
+  textSizeClass = "text-[11px] sm:text-[12px] font-extrabold tracking-[0.16em]"
 }) => {
   return (
     <div className={`flex flex-row items-center justify-center gap-2.5 ${className}`}>
