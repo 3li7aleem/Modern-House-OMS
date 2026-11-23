@@ -236,7 +236,7 @@ const PosScreen: React.FC = () => {
     return getPosCrossSellSuggestions(
       cartItems.map(it => ({ productId: it.product.id, name: it.product.name, quantity: it.quantity })),
       products
-    );
+    ) || [];
   }, [cartItems, products]);
 
   // Cart helper functions

@@ -106,6 +106,32 @@ async function syncOrderToFirestore(order) {
 }
 
 /**
+ * Updates a product's stock in Firestore (Desktop -> Cloud)
+ */
+async function syncProductStockToFirestore(productId, newStock) {
+  if (!firebaseConfig || !productId) return false;
+  try {
+    const patchUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/products/${encodeURIComponent(productId)}?updateMask.fieldPaths=stock&key=${firebaseConfig.apiKey}`;
+    const res = await fetch(patchUrl, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          stock: { integerValue: String(Math.max(0, Math.floor(newStock))) }
+        }
+      })
+    });
+    if (res.ok) {
+      console.log(`[CloudSync] Updated stock in Firestore for product ${productId} to ${newStock}.`);
+      return true;
+    }
+  } catch (err) {
+    console.warn(`[CloudSync] Stock sync error for ${productId}:`, err.message);
+  }
+  return false;
+}
+
+/**
  * Pulls all orders from Firestore into local SQLite (Cloud -> Desktop)
  */
 async function pullOrdersFromFirestore(db, win) {
@@ -148,24 +174,6 @@ async function pullOrdersFromFirestore(db, win) {
       if (!existing || existing.orderNumber !== rOrder.orderNumber || existing.status !== rOrder.status || Number(existing.total) !== Number(rOrder.total)) {
         insertStmt.run('orders', rOrder.id, JSON.stringify(rOrder));
         changedCount++;
-
-        // If newly pulled from web, deduct inventory stock in local products table
-        if (!existing && Array.isArray(rOrder.items)) {
-          for (const item of rOrder.items) {
-            if (item.productId && item.quantity) {
-              const pRow = db.db.prepare('SELECT data FROM records WHERE collection = ? AND id = ?').get('products', item.productId);
-              if (pRow) {
-                try {
-                  const prod = JSON.parse(pRow.data);
-                  if (typeof prod.stock === 'number') {
-                    prod.stock = Math.max(0, prod.stock - Number(item.quantity));
-                    insertStmt.run('products', prod.id, JSON.stringify(prod));
-                  }
-                } catch {}
-              }
-            }
-          }
-        }
       }
     }
 
@@ -181,6 +189,61 @@ async function pullOrdersFromFirestore(db, win) {
   } catch (err) {
     console.warn('[CloudSync] Pull error:', err.message);
     return 0;
+  }
+}
+
+/**
+ * Synchronizes product stocks and catalog between Firestore and local SQLite
+ */
+async function syncProductsBidirectional(db, win) {
+  if (!firebaseConfig || !db || !db.db) return;
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents:runQuery?key=${firebaseConfig.apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'products' }], limit: 300 } })
+    });
+
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+
+    const fireProds = data.filter(d => d.document).map(d => ({
+      id: d.document.name.split('/').pop(),
+      ...parseFirestoreDoc(d.document.fields)
+    }));
+
+    const localRows = db.db.prepare('SELECT id, data FROM records WHERE collection = ?').all('products');
+    const localMap = new Map();
+    for (const r of localRows) {
+      try {
+        localMap.set(r.id, JSON.parse(r.data));
+      } catch {}
+    }
+
+    let productsUpdated = false;
+    const updateStmt = db.db.prepare('INSERT OR REPLACE INTO records VALUES (?, ?, ?)');
+
+    for (const fp of fireProds) {
+      const lp = localMap.get(fp.id);
+      if (lp) {
+        if (Number(lp.stock) !== Number(fp.stock)) {
+          lp.stock = Number(fp.stock);
+          updateStmt.run('products', lp.id, JSON.stringify(lp));
+          productsUpdated = true;
+        }
+      } else {
+        updateStmt.run('products', fp.id, JSON.stringify(fp));
+        productsUpdated = true;
+      }
+    }
+
+    if (productsUpdated && win && !win.isDestroyed()) {
+      win.webContents.send('oms:changed', 'products');
+    }
+  } catch (err) {
+    console.warn('[CloudSync] syncProductsBidirectional error:', err.message);
   }
 }
 
@@ -202,13 +265,14 @@ async function syncAllLocalOrders(db) {
 let syncInProgress = false;
 
 /**
- * Full bidirectional sync cycle: Pulls cloud updates first, then pushes local changes
+ * Full bidirectional sync cycle: Pulls orders & reconciles product stocks in real time
  */
 async function syncBidirectional(db, win) {
   if (syncInProgress) return;
   syncInProgress = true;
   try {
     await pullOrdersFromFirestore(db, win);
+    await syncProductsBidirectional(db, win);
     await syncAllLocalOrders(db);
   } catch (e) {
     console.warn('[CloudSync] Bidirectional sync cycle error:', e.message);
@@ -219,7 +283,9 @@ async function syncBidirectional(db, win) {
 
 module.exports = {
   syncOrderToFirestore,
+  syncProductStockToFirestore,
   pullOrdersFromFirestore,
+  syncProductsBidirectional,
   syncAllLocalOrders,
   syncBidirectional
 };

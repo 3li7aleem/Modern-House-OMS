@@ -451,9 +451,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (!data) throw new Error("Failed to create order in database");
           
           for (const item of newOrderData.items) {
-              const product = products.find(p => p.id === item.productId);
+              const product = products.find(p => p.id === item.productId || (item.productId && p.sku === item.productId));
               if (product) {
-                  const newStock = product.stock - item.quantity;
+                  const newStock = Math.max(0, (product.stock || 0) - item.quantity);
                   await ProductService.update(product.id, { stock: newStock });
                   
                   if (newStock <= product.lowStockThreshold) {
@@ -523,10 +523,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           for (const productId in stockChanges) {
               const diff = stockChanges[productId];
               if (diff !== 0) {
-                  const product = products.find(p => p.id === productId);
+                  const product = products.find(p => p.id === productId || (productId && p.sku === productId));
                   if (product) {
-                      const newStock = product.stock + diff;
-                      await ProductService.update(productId, { stock: newStock });
+                      const newStock = Math.max(0, (product.stock || 0) + diff);
+                      await ProductService.update(product.id, { stock: newStock });
                   }
               }
           }
@@ -552,9 +552,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const order = orders.find(o => o.id === orderId);
           if (order) {
               for (const item of order.items) {
-                  const product = products.find(p => p.id === item.productId);
+                  const product = products.find(p => p.id === item.productId || (item.productId && p.sku === item.productId));
                   if (product) {
-                      const newStock = product.stock + item.quantity;
+                      const newStock = (product.stock || 0) + item.quantity;
                       await ProductService.update(product.id, { stock: newStock });
                   }
               }
@@ -799,9 +799,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const po = purchaseOrders.find(p => p.id === orderId);
           if (po && po.status !== 'Received') {
               for (const item of po.items) {
-                  const product = products.find(p => p.id === item.productId);
+                  const product = products.find(p => p.id === item.productId || (item.productId && p.sku === item.productId));
                   if (product) {
-                      const newStock = product.stock + item.quantity;
+                      const newStock = (product.stock || 0) + item.quantity;
                       await ProductService.update(product.id, { stock: newStock });
                   }
               }

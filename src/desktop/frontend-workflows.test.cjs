@@ -41,6 +41,7 @@ function load(relative, dependencies, browser = {}) {
       if (Object.hasOwn(dependencies, id)) return dependencies[id];
       if (id === 'lucide-react') return new Proxy({}, { get: (_target, name) => String(name) });
       if (id === 'motion/react') return { motion: new Proxy({}, { get: (_target, name) => String(name) }), AnimatePresence: 'AnimatePresence' };
+      if (id.includes('aiService')) return new Proxy({}, { get: (_target, name) => () => [] });
       if (id.startsWith('../components/')) return new Proxy({ __esModule: true, default: id }, { get: (target, name) => target[name] || String(name) });
       throw new Error(`Unstubbed dependency ${id}`);
     },
@@ -149,8 +150,8 @@ test('POS prints the persisted desktop order number after checkout', async () =>
   assert.ok(checkout, 'Checkout button exists');
   await checkout.props.onClick();
   assert.deepEqual(plain(calls), [['get', 'orders', 'o1']]);
-  assert.equal(states[24]?.order.orderNumber, savedOrder.orderNumber);
-  assert.deepEqual(plain(states[24]?.order), savedOrder);
+  assert.equal(states[29]?.order.orderNumber, savedOrder.orderNumber);
+  assert.deepEqual(plain(states[29]?.order), savedOrder);
   assert.equal(states[4].length, 0);
 });
 
@@ -169,7 +170,7 @@ for (const failure of ['read error', 'missing record']) {
     });
     await findButton(PosScreen(), 'handleCheckout').props.onClick();
     assert.equal(states[4].length, 0, 'A saved order must not be submitted again from the same cart');
-    assert.equal(states[24], null);
+    assert.equal(states[29], null);
     assert.equal(alerts.length, 1);
     assert.match(alerts[0], /saved.*o1.*receipt/i);
   });

@@ -6,7 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { LocalDatabase } = require('./database.cjs');
 const { createInstallation } = require('./installation.cjs');
 const { createBackupManager } = require('./backups.cjs');
-const { syncOrderToFirestore, syncAllLocalOrders, pullOrdersFromFirestore, syncBidirectional } = require('./cloudSync.cjs');
+const { syncOrderToFirestore, syncProductStockToFirestore, syncAllLocalOrders, pullOrdersFromFirestore, syncBidirectional } = require('./cloudSync.cjs');
 let createTabletServer = null;
 try {
   ({ createTabletServer } = require('./server.cjs'));
@@ -247,21 +247,58 @@ if (locked) app.whenReady().then(async () => {
       case 'list': return db.list(collection, id);
       case 'get': return db.get(collection, id);
       case 'create': result = db.create(collection, id); break;
-      case 'update': result = db.update(collection, id, payload); break;
+      case 'update':
+        result = db.update(collection, id, payload);
+        if (collection === 'products' && payload && typeof payload.stock === 'number') {
+          syncProductStockToFirestore(id, payload.stock).catch(() => {});
+        }
+        break;
       case 'delete': result = db.delete(collection, id); break;
       case 'saveOrder':
         await pullOrdersFromFirestore(db, win).catch(() => {});
         result = db.saveOrder(collection, { ...id, userId: activeUser || 'local-admin' });
         changed = ['orders', 'products', 'notifications', 'deliveries', 'requests', 'quotations'];
-        if (result) syncOrderToFirestore(result).catch(() => {});
+        if (result) {
+          syncOrderToFirestore(result).catch(() => {});
+          if (Array.isArray(result.items)) {
+            for (const it of result.items) {
+              if (it && it.productId) {
+                const prod = db.get('products', it.productId);
+                if (prod && typeof prod.stock === 'number') {
+                  syncProductStockToFirestore(it.productId, prod.stock).catch(() => {});
+                }
+              }
+            }
+          }
+        }
         break;
       case 'deleteOrder':
         result = db.deleteOrder(collection);
         changed = ['orders', 'products', 'deliveries'];
+        if (result && Array.isArray(result.items)) {
+          for (const it of result.items) {
+            if (it && it.productId) {
+              const prod = db.get('products', it.productId);
+              if (prod && typeof prod.stock === 'number') {
+                syncProductStockToFirestore(it.productId, prod.stock).catch(() => {});
+              }
+            }
+          }
+        }
         break;
       case 'receivePurchaseOrder':
         result = db.receivePurchaseOrder(collection);
         changed = ['purchase_orders', 'products'];
+        if (result && Array.isArray(result.items)) {
+          for (const it of result.items) {
+            if (it && it.productId) {
+              const prod = db.get('products', it.productId);
+              if (prod && typeof prod.stock === 'number') {
+                syncProductStockToFirestore(it.productId, prod.stock).catch(() => {});
+              }
+            }
+          }
+        }
         break;
       case 'session': return activeUser ? db.get('users', activeUser) : null;
       case 'callGemini': {
