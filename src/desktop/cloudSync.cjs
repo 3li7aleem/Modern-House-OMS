@@ -11,7 +11,32 @@ try {
     firebaseConfig = JSON.parse(fs.readFileSync(rootCfgPath, 'utf8'));
   }
 } catch (e) {
-  console.warn('Could not load firebase config for cloud sync:', e.message);
+  console.warn('[CloudSync] Could not load firebase config:', e.message);
+}
+
+function parseFirestoreDoc(fields) {
+  if (!fields) return null;
+  const parseVal = (v) => {
+    if (!v) return null;
+    if ('stringValue' in v) return v.stringValue;
+    if ('doubleValue' in v) return Number(v.doubleValue);
+    if ('integerValue' in v) return Number(v.integerValue);
+    if ('booleanValue' in v) return Boolean(v.booleanValue);
+    if ('arrayValue' in v) return (v.arrayValue.values || []).map(parseVal);
+    if ('mapValue' in v) {
+      const res = {};
+      for (const [k, val] of Object.entries(v.mapValue.fields || {})) {
+        res[k] = parseVal(val);
+      }
+      return res;
+    }
+    return null;
+  };
+  const obj = {};
+  for (const [k, v] of Object.entries(fields)) {
+    obj[k] = parseVal(v);
+  }
+  return obj;
 }
 
 function toFirestoreValue(val) {
@@ -34,13 +59,15 @@ function toFirestoreValue(val) {
   return { stringValue: String(val) };
 }
 
+/**
+ * Pushes a local order to Firestore (Desktop -> Cloud)
+ */
 async function syncOrderToFirestore(order) {
   if (!firebaseConfig || !order) return false;
   try {
     const docId = order.id || order.orderNumber;
     const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/orders/${encodeURIComponent(docId)}?key=${firebaseConfig.apiKey}`;
     
-    // Ensure all required fields for isValidOrder are present
     const payload = {
       fields: {
         userId: { stringValue: order.userId || 'local-admin' },
@@ -65,24 +92,105 @@ async function syncOrderToFirestore(order) {
     });
 
     if (res.ok) {
-      console.log(`[CloudSync] Synced order ${order.orderNumber || docId} to Firestore.`);
+      console.log(`[CloudSync] Pushed order ${order.orderNumber} (${docId}) to Cloud.`);
       return true;
     } else {
       const errText = await res.text();
-      console.warn(`[CloudSync] Failed to sync order ${order.orderNumber}:`, errText);
+      console.warn(`[CloudSync] Failed to push order ${order.orderNumber}:`, errText);
       return false;
     }
   } catch (err) {
-    console.warn(`[CloudSync] Network offline or sync error:`, err.message);
+    console.warn(`[CloudSync] Push error:`, err.message);
     return false;
   }
 }
 
-async function syncAllLocalOrders(db) {
-  if (!db || typeof db.list !== 'function') return;
+/**
+ * Pulls all orders from Firestore into local SQLite (Cloud -> Desktop)
+ */
+async function pullOrdersFromFirestore(db, win) {
+  if (!firebaseConfig || !db || !db.db) return 0;
   try {
-    const orders = db.list('orders') || [];
-    console.log(`[CloudSync] Starting background sync for ${orders.length} orders...`);
+    const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents:runQuery?key=${firebaseConfig.apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'orders' }] } })
+    });
+
+    if (!res.ok) return 0;
+
+    const data = await res.json();
+    if (!Array.isArray(data)) return 0;
+
+    const remoteOrders = data.filter(d => d.document).map(d => ({
+      id: d.document.name.split('/').pop(),
+      ...parseFirestoreDoc(d.document.fields)
+    }));
+
+    if (remoteOrders.length === 0) return 0;
+
+    const localRows = db.db.prepare('SELECT id, data FROM records WHERE collection = ?').all('orders');
+    const localMap = new Map();
+    for (const r of localRows) {
+      try {
+        localMap.set(r.id, JSON.parse(r.data));
+      } catch {}
+    }
+
+    let changedCount = 0;
+    const insertStmt = db.db.prepare('INSERT OR REPLACE INTO records VALUES (?, ?, ?)');
+
+    for (const rOrder of remoteOrders) {
+      const existing = localMap.get(rOrder.id);
+      
+      // Check if order is new or updated
+      if (!existing || existing.orderNumber !== rOrder.orderNumber || existing.status !== rOrder.status || Number(existing.total) !== Number(rOrder.total)) {
+        insertStmt.run('orders', rOrder.id, JSON.stringify(rOrder));
+        changedCount++;
+
+        // If newly pulled from web, deduct inventory stock in local products table
+        if (!existing && Array.isArray(rOrder.items)) {
+          for (const item of rOrder.items) {
+            if (item.productId && item.quantity) {
+              const pRow = db.db.prepare('SELECT data FROM records WHERE collection = ? AND id = ?').get('products', item.productId);
+              if (pRow) {
+                try {
+                  const prod = JSON.parse(pRow.data);
+                  if (typeof prod.stock === 'number') {
+                    prod.stock = Math.max(0, prod.stock - Number(item.quantity));
+                    insertStmt.run('products', prod.id, JSON.stringify(prod));
+                  }
+                } catch {}
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (changedCount > 0) {
+      console.log(`[CloudSync] Pulled and synced ${changedCount} orders from Cloud into local SQLite.`);
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('oms:changed', 'orders');
+        win.webContents.send('oms:changed', 'products');
+      }
+    }
+
+    return changedCount;
+  } catch (err) {
+    console.warn('[CloudSync] Pull error:', err.message);
+    return 0;
+  }
+}
+
+/**
+ * Pushes any local orders that might be missing in Firestore
+ */
+async function syncAllLocalOrders(db) {
+  if (!db || typeof db.raw !== 'function') return;
+  try {
+    const orders = db.raw('orders') || [];
     for (const order of orders) {
       await syncOrderToFirestore(order);
     }
@@ -91,7 +199,27 @@ async function syncAllLocalOrders(db) {
   }
 }
 
+let syncInProgress = false;
+
+/**
+ * Full bidirectional sync cycle: Pulls cloud updates first, then pushes local changes
+ */
+async function syncBidirectional(db, win) {
+  if (syncInProgress) return;
+  syncInProgress = true;
+  try {
+    await pullOrdersFromFirestore(db, win);
+    await syncAllLocalOrders(db);
+  } catch (e) {
+    console.warn('[CloudSync] Bidirectional sync cycle error:', e.message);
+  } finally {
+    syncInProgress = false;
+  }
+}
+
 module.exports = {
   syncOrderToFirestore,
-  syncAllLocalOrders
+  pullOrdersFromFirestore,
+  syncAllLocalOrders,
+  syncBidirectional
 };

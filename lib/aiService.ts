@@ -73,6 +73,31 @@ export function getEffectiveApiKey(): string {
   return '';
 }
 
+async function doGeminiRequest(targetUrl: string, requestBody: any): Promise<{ ok: boolean; status: number; data: any; rawMsg: string }> {
+  // If running inside desktop Electron app, route directly through Main process
+  if (typeof window !== 'undefined' && (window as any).omsDesktop?.call) {
+    try {
+      const ipcRes = await (window as any).omsDesktop.call('callGemini', targetUrl, requestBody);
+      if (ipcRes && typeof ipcRes.ok === 'boolean') {
+        const rawMsg = ipcRes.json?.error?.message || '';
+        return { ok: ipcRes.ok, status: ipcRes.status, data: ipcRes.json, rawMsg };
+      }
+    } catch (e) {
+      console.warn('[AI] Desktop IPC call error, falling back to direct fetch:', e);
+    }
+  }
+
+  // Standard fetch for Web or fallback
+  const res = await fetch(targetUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+  const data = await res.json().catch(() => ({}));
+  const rawMsg = data.error?.message || '';
+  return { ok: res.ok, status: res.status, data, rawMsg };
+}
+
 /**
  * Core caller to Google Gemini REST API (v1beta)
  */
@@ -139,15 +164,10 @@ export async function callGeminiApi(
     body.generationConfig.responseSchema = options.responseSchema;
   }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  const res = await doGeminiRequest(url, body);
 
   if (!res.ok) {
-    const errorJson = await res.json().catch(() => ({}));
-    const rawMsg = errorJson.error?.message || '';
+    const rawMsg = res.rawMsg || '';
 
     // If the requested model is experiencing high demand, spikes, rate limits or deprecation,
     // automatically failover to highly available Gemini 3 generation models (3.1-flash-lite, 3.5-flash, 3.8-flash)
@@ -169,14 +189,9 @@ export async function callGeminiApi(
         if (fb !== model) {
           try {
             const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fb}:generateContent?key=${apiKey}`;
-            const fbRes = await fetch(fallbackUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(body)
-            });
+            const fbRes = await doGeminiRequest(fallbackUrl, body);
             if (fbRes.ok) {
-              const fbData = await fbRes.json();
-              const recoveredText = fbData.candidates?.[0]?.content?.parts?.[0]?.text;
+              const recoveredText = fbRes.data.candidates?.[0]?.content?.parts?.[0]?.text;
               if (recoveredText) {
                 // Automatically switch the user to the stable working model
                 try {
@@ -199,8 +214,7 @@ export async function callGeminiApi(
     throw new Error(msg);
   }
 
-  const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const text = res.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   return text;
 }
 

@@ -6,7 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { LocalDatabase } = require('./database.cjs');
 const { createInstallation } = require('./installation.cjs');
 const { createBackupManager } = require('./backups.cjs');
-const { syncOrderToFirestore, syncAllLocalOrders } = require('./cloudSync.cjs');
+const { syncOrderToFirestore, syncAllLocalOrders, pullOrdersFromFirestore, syncBidirectional } = require('./cloudSync.cjs');
 let createTabletServer = null;
 try {
   ({ createTabletServer } = require('./server.cjs'));
@@ -158,8 +158,8 @@ if (locked) app.whenReady().then(async () => {
   backups = createBackupManager({ directory: path.join(installation.dataDirectory, 'backups'), exportBackup: () => db.exportBackup(), onError: reportBackupError, intervalMs: smokeTest ? 200 : 15 * 60 * 1000 });
   backups.start();
   if (!smokeTest) {
-    setTimeout(() => { syncAllLocalOrders(db).catch(() => {}); }, 4000);
-    setInterval(() => { syncAllLocalOrders(db).catch(() => {}); }, 5 * 60 * 1000);
+    setTimeout(() => { syncBidirectional(db, win).catch(() => {}); }, 2000);
+    setInterval(() => { syncBidirectional(db, win).catch(() => {}); }, 5000);
   }
   if (!smokeTest && typeof createTabletServer === 'function') {
     try {
@@ -192,9 +192,21 @@ if (locked) app.whenReady().then(async () => {
   win = new BrowserWindow({ width: 1440, height: 940, minWidth: 900, minHeight: 600, title: 'Modern House OMS — محلي', show: !process.argv.includes('--smoke-test'),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   win.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
-  // Allow product images while blocking external scripts and tracking
+  // Allow product images, Google Gemini AI API, and Google Firestore REST API
   win.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] }, (details, callback) => {
     if (details.resourceType === 'image' || /\.(png|jpe?g|webp|svg|gif|avif)(\?.*)?$/i.test(details.url)) {
+      return callback({ cancel: false });
+    }
+    // Allow Google Generative AI (Gemini API)
+    if (details.url.includes('generativelanguage.googleapis.com')) {
+      return callback({ cancel: false });
+    }
+    // Allow Google Firestore REST API & Firebase
+    if (details.url.includes('firestore.googleapis.com') || details.url.includes('firebaseio.com')) {
+      return callback({ cancel: false });
+    }
+    // Allow local tablet connections
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?\//.test(details.url)) {
       return callback({ cancel: false });
     }
     callback({ cancel: true });
@@ -215,6 +227,9 @@ if (locked) app.whenReady().then(async () => {
     child.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   });
   win.webContents.on('will-navigate', (event, url) => { if (url.split('#')[0] !== entryURL) { event.preventDefault(); external(url); } });
+  win.on('focus', () => {
+    syncBidirectional(db, win).catch(() => {});
+  });
   ipcMain.on('oms:preferences', event => {
     try { trusted(event); event.returnValue = db.preferences(); } catch { event.returnValue = {}; }
   });
@@ -235,6 +250,7 @@ if (locked) app.whenReady().then(async () => {
       case 'update': result = db.update(collection, id, payload); break;
       case 'delete': result = db.delete(collection, id); break;
       case 'saveOrder':
+        await pullOrdersFromFirestore(db, win).catch(() => {});
         result = db.saveOrder(collection, { ...id, userId: activeUser || 'local-admin' });
         changed = ['orders', 'products', 'notifications', 'deliveries', 'requests', 'quotations'];
         if (result) syncOrderToFirestore(result).catch(() => {});
@@ -248,6 +264,22 @@ if (locked) app.whenReady().then(async () => {
         changed = ['purchase_orders', 'products'];
         break;
       case 'session': return activeUser ? db.get('users', activeUser) : null;
+      case 'callGemini': {
+        const [apiUrl, requestBody] = args;
+        try {
+          const resp = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          });
+          const status = resp.status;
+          const ok = resp.ok;
+          const json = await resp.json().catch(() => ({}));
+          return { ok, status, json };
+        } catch (err) {
+          return { ok: false, status: 0, json: { error: { message: err.message } } };
+        }
+      }
       case 'getCloudUrl': return activeTunnelUrl;
       case 'login': result = db.login(...args); activeUser = result.id; return result;
       case 'loginPin': result = db.loginPin(...args); activeUser = result.id; return result;
