@@ -84,7 +84,7 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
         
-        while (heightLeft > 0) {
+        while (heightLeft > 2) {
             position = -pageHeight * page;
             pdf.addPage();
             pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
@@ -109,7 +109,7 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
       aria-modal="true"
       role="dialog"
     >
-      <div id="print-modal-dialog" className="bg-card rounded-lg shadow-xl w-full max-w-4xl transform transition-all scale-95 opacity-0 animate-fade-in-scale dark:bg-dark-card flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
+      <div id="print-modal-dialog" className="bg-card rounded-lg shadow-xl w-full max-w-[900px] transform transition-all scale-95 opacity-0 animate-fade-in-scale dark:bg-dark-card flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
         <div className="p-5 border-b rounded-t dark:border-dark-border no-print flex justify-between items-center flex-shrink-0">
           <h3 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">
             {t('orders.print_modal.title')}
@@ -123,8 +123,8 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
           </button>
         </div>
 
-        <div className="overflow-y-auto" id="printable-invoice-wrapper">
-          <div ref={printableContentRef} id="printable-invoice">
+        <div className="overflow-y-auto bg-slate-100/90 dark:bg-slate-950/70 p-4 sm:p-6 print:p-0 print:bg-white" id="printable-invoice-wrapper">
+          <div ref={printableContentRef} id="printable-invoice" className="w-full max-w-[210mm] mx-auto bg-white shadow-lg print:shadow-none print:max-w-none print:w-full">
               <InvoiceTemplate order={order} settings={settings} />
           </div>
         </div>
@@ -154,6 +154,11 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
           to { transform: scale(1); opacity: 1; }
         }
         .animate-fade-in-scale { animation: fadeInScale 0.2s ease-out forwards; }
+
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
         
         @media print {
             body * {
@@ -167,11 +172,12 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
                 position: absolute !important;
                 left: 0;
                 top: 0;
-                width: 100vw;
+                width: 100%;
                 height: auto;
                 background: none;
                 display: block;
                 padding: 0;
+                margin: 0;
             }
             #print-modal-dialog {
                 visibility: visible;
@@ -180,8 +186,10 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
                 box-shadow: none;
                 width: 100%;
                 max-width: 100%;
+                max-height: none;
                 display: block;
                 margin: 0;
+                padding: 0;
             }
             #printable-invoice-wrapper, #printable-invoice-wrapper * {
                 visibility: visible;
@@ -191,12 +199,19 @@ const PrintOrderModal: React.FC<PrintOrderModalProps> = ({ order, onClose }) => 
                 width: 100%;
                 height: auto;
                 overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: #fff !important;
             }
             #printable-invoice {
                 visibility: visible;
-                width: 100%;
+                width: 100% !important;
+                max-width: none !important;
                 color: #000;
                 background: #fff;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             tr, td, th {
                 page-break-inside: avoid !important;

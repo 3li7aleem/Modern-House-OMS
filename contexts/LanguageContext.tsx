@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
-import { formatCurrency as formatCurrencyUtil, formatDate as formatDateUtil, formatTime as formatTimeUtil } from '../lib/utils';
+import { formatCurrency as formatCurrencyUtil, formatNumber as formatNumberUtil, formatDate as formatDateUtil, formatTime as formatTimeUtil } from '../lib/utils';
 
 // --- Embedded Translations ---
 const enTranslations = {
@@ -1493,6 +1493,7 @@ interface LanguageContextType {
   changeLanguage: () => void;
   t: (key: string, params?: { [key: string]: string | number }) => string;
   formatCurrency: (amount: number) => string;
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
   formatDate: (dateString: string) => string;
   formatTime: (dateString: string) => string;
 }
@@ -1567,6 +1568,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const formatCurrency = useCallback((amount: number) => {
     return formatCurrencyUtil(amount, language);
   }, [language]);
+
+  const formatNumber = useCallback((value: number, options?: Intl.NumberFormatOptions) => {
+    return formatNumberUtil(value, language, options);
+  }, [language]);
   
   const formatDate = useCallback((dateString: string) => {
     return formatDateUtil(dateString, language);
@@ -1576,7 +1581,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return formatTimeUtil(dateString, language);
   }, [language]);
 
-  const value = useMemo(() => ({ language, changeLanguage, t, formatCurrency, formatDate, formatTime }), [language, changeLanguage, t, formatCurrency, formatDate, formatTime]);
+  const value = useMemo(() => ({ language, changeLanguage, t, formatCurrency, formatNumber, formatDate, formatTime }), [language, changeLanguage, t, formatCurrency, formatNumber, formatDate, formatTime]);
 
   return (
     <LanguageContext.Provider value={value}>

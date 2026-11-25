@@ -12,6 +12,16 @@ export const formatCurrency = (amount: number | null | undefined, language: 'en'
     }).format(num);
 };
 
+export const formatNumber = (
+    value: number | null | undefined,
+    language: 'en' | 'ar' = 'ar',
+    options?: Intl.NumberFormatOptions
+) => {
+    const num = (typeof value === 'number' && !isNaN(value) && isFinite(value)) ? value : 0;
+    const locale = language === 'ar' ? 'ar-BH-u-nu-arab' : 'en-US';
+    return new Intl.NumberFormat(locale, options).format(num);
+};
+
 export const formatDate = (dateString: string, language: 'en' | 'ar') => {
     const locale = language === 'ar' ? 'ar-BH' : 'en-GB';
     return new Date(dateString).toLocaleDateString(locale, {

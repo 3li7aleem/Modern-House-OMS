@@ -42,8 +42,8 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({
   timeframe,
   data
 }) => {
-  const { t, language, formatCurrency, formatDate } = useTranslation();
-  const { storeName } = useSettings();
+  const { t, language, formatCurrency, formatNumber, formatDate } = useTranslation();
+  const { logoUrl, invoiceSettings } = useSettings();
   const { currentUser } = useAppContext();
   const isAr = language === 'ar';
 
@@ -248,18 +248,26 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({
             {/* 1. Official Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b-2 border-amber-500/40 gap-4">
               <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-2xl shadow-md border border-amber-400/40">
-                  MH
-                </div>
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={isAr ? (invoiceSettings?.companyNameAr || 'مودرن هاوس للتجارة') : (invoiceSettings?.companyNameEn || 'Modern House for Trading')}
+                    className="h-14 w-auto object-contain shrink-0"
+                  />
+                ) : (
+                  <Logo showText={false} className="h-14 w-auto shrink-0" />
+                )}
                 <div>
                   <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    {isAr ? 'مودرن هاوس للتجارة' : 'Modern House for Trading'}
+                    {isAr ? (invoiceSettings?.companyNameAr || 'مودرن هاوس للتجارة') : (invoiceSettings?.companyNameEn || 'Modern House for Trading')}
                   </h1>
                   <p className="text-xs text-slate-500 font-medium">
-                    {isAr ? 'المطابخ العصرية • الأجهزة المدمجة • سوق واقف' : 'Modern Kitchens • Built-in Appliances • Souq Waqif'}
+                    {invoiceSettings?.address || (isAr ? 'المطابخ العصرية • الأجهزة المدمجة • سوق واقف' : 'Modern Kitchens • Built-in Appliances • Souq Waqif')}
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    {isAr ? 'هاتف: 35965477 (973+) • مملكة البحرين' : 'Tel: +973 35965477 • Kingdom of Bahrain'}
+                    {isAr
+                      ? `هاتف: ${invoiceSettings?.phone || '35965477 (973+)'} • مملكة البحرين`
+                      : `Tel: ${invoiceSettings?.phone || '+973 35965477'} • Kingdom of Bahrain`}
                   </p>
                 </div>
               </div>
@@ -288,7 +296,7 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({
                     <span className="text-[11px] font-bold text-slate-500 block truncate">
                       {card.label}
                     </span>
-                    <span className="text-lg font-black text-slate-900 block mt-1 font-mono">
+                    <span className="text-lg font-black text-slate-900 block mt-1 tabular-nums">
                       {card.value}
                     </span>
                     {card.hint && (
@@ -323,11 +331,11 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({
                       className={rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}
                     >
                       {row.map((cell, cIdx) => (
-                        <td 
-                          key={cIdx} 
-                          className={`p-3 text-slate-800 ${cIdx === 0 ? 'text-start font-medium' : 'text-center font-mono'}`}
+                        <td
+                          key={cIdx}
+                          className={`p-3 text-slate-800 ${cIdx === 0 ? 'text-start font-medium' : 'text-center tabular-nums'}`}
                         >
-                          {cell}
+                          {typeof cell === 'number' ? formatNumber(cell) : cell}
                         </td>
                       ))}
                     </tr>
@@ -345,11 +353,11 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({
                   {data.totalsRow && (
                     <tr className="bg-amber-500/10 font-bold border-t-2 border-slate-300">
                       {data.totalsRow.map((tot, tIdx) => (
-                        <td 
-                          key={tIdx} 
-                          className={`p-3 text-slate-900 font-black ${tIdx === 0 ? 'text-start' : 'text-center font-mono'}`}
+                        <td
+                          key={tIdx}
+                          className={`p-3 text-slate-900 font-black ${tIdx === 0 ? 'text-start' : 'text-center tabular-nums'}`}
                         >
-                          {tot}
+                          {typeof tot === 'number' ? formatNumber(tot) : tot}
                         </td>
                       ))}
                     </tr>

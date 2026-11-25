@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../contexts/LanguageContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -22,10 +22,14 @@ type TimeframeFilter = 'today' | 'week' | 'month' | 'last_month' | 'year' | 'all
 
 const ReportsScreen: React.FC = () => {
   const { orders, products, employees, expenses, customers } = useAppContext();
-  const { t, formatCurrency, formatDate, language } = useTranslation();
-  const { logoUrl, footerText, storeName } = useSettings();
+  const { t, formatCurrency, formatNumber, formatDate, language } = useTranslation();
+  const { logoUrl, footerText } = useSettings();
   const { theme } = useTheme();
   const isRtl = language === 'ar';
+
+  const formatPercent = useCallback((value: number, digits = 1) => {
+    return `${formatNumber(value, { minimumFractionDigits: digits, maximumFractionDigits: digits })}%`;
+  }, [formatNumber]);
 
   const [activeTab, setActiveTab] = useState<ReportTab>('sales');
   const [timeframe, setTimeframe] = useState<TimeframeFilter>('all');
@@ -384,7 +388,7 @@ const ReportsScreen: React.FC = () => {
   const currentReportData = useMemo(() => {
     const timeframeLabels: Record<TimeframeFilter, string> = {
       today: isRtl ? 'اليوم' : 'Today',
-      week: isRtl ? 'آخر 7 أيام' : 'Last 7 Days',
+      week: isRtl ? `آخر ${formatNumber(7)} أيام` : 'Last 7 Days',
       month: isRtl ? 'هذا الشهر' : 'This Month',
       last_month: isRtl ? 'الشهر الماضي' : 'Last Month',
       year: isRtl ? 'هذا العام' : 'This Year',
@@ -398,9 +402,9 @@ const ReportsScreen: React.FC = () => {
         periodLabel,
         summaryCards: [
           { label: isRtl ? 'إجمالي الإيرادات' : 'Total Revenue', value: formatCurrency(salesMetrics.totalRevenue) },
-          { label: isRtl ? 'عدد الفواتير' : 'Invoices Count', value: String(filteredOrders.length) },
+          { label: isRtl ? 'عدد الفواتير' : 'Invoices Count', value: formatNumber(filteredOrders.length) },
           { label: isRtl ? 'متوسط الفاتورة' : 'Avg Order Value', value: formatCurrency(salesMetrics.avgOrderValue) },
-          { label: isRtl ? 'إجمالي القطع المباعة' : 'Items Sold', value: String(salesMetrics.totalItemsCount) }
+          { label: isRtl ? 'إجمالي القطع المباعة' : 'Items Sold', value: formatNumber(salesMetrics.totalItemsCount) }
         ],
         tableHeaders: [
           isRtl ? 'رقم الفاتورة' : 'Invoice #',
@@ -421,7 +425,7 @@ const ReportsScreen: React.FC = () => {
         totalsRow: [
           isRtl ? 'المجموع الإجمالي' : 'Grand Total',
           '-',
-          `${filteredOrders.length} ${isRtl ? 'فاتورة' : 'orders'}`,
+          `${formatNumber(filteredOrders.length)} ${isRtl ? 'فاتورة' : 'orders'}`,
           salesMetrics.totalItemsCount,
           '-',
           formatCurrency(salesMetrics.totalRevenue)
@@ -436,8 +440,8 @@ const ReportsScreen: React.FC = () => {
         title: isRtl ? 'تقرير تقييم وجرد المخزون والأجهزة' : 'Inventory Valuation & Stock Report',
         periodLabel: isRtl ? 'الرصيد اللحظي' : 'Current Snapshot',
         summaryCards: [
-          { label: isRtl ? 'إجمالي الأصناف' : 'Total SKUs', value: String(products.length) },
-          { label: isRtl ? 'إجمالي القطع المتوفرة' : 'Stock Units', value: String(totalStock) },
+          { label: isRtl ? 'إجمالي الأصناف' : 'Total SKUs', value: formatNumber(products.length) },
+          { label: isRtl ? 'إجمالي القطع المتوفرة' : 'Stock Units', value: formatNumber(totalStock) },
           { label: isRtl ? 'تقييم التكلفة' : 'Cost Valuation', value: formatCurrency(totalCost) },
           { label: isRtl ? 'تقييم سعر البيع' : 'Retail Valuation', value: formatCurrency(totalRetail) }
         ],
@@ -462,7 +466,7 @@ const ReportsScreen: React.FC = () => {
         totalsRow: [
           isRtl ? 'الإجمالي العام' : 'Total',
           '-',
-          `${products.length} ${isRtl ? 'صنف' : 'items'}`,
+          `${formatNumber(products.length)} ${isRtl ? 'صنف' : 'items'}`,
           totalStock,
           '-',
           '-',
@@ -485,15 +489,15 @@ const ReportsScreen: React.FC = () => {
           isRtl ? 'النسبة من المبيعات' : 'Percentage'
         ],
         tableRows: [
-          [isRtl ? 'إجمالي إيرادات المبيعات' : 'Total Sales Revenue', formatCurrency(financeMetrics.revenue), '100%'],
-          [isRtl ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold', formatCurrency(financeMetrics.cogs), `${((financeMetrics.cogs / (financeMetrics.revenue || 1)) * 100).toFixed(1)}%`],
-          [isRtl ? 'مجمل الربح' : 'Gross Profit', formatCurrency(financeMetrics.grossProfit), `${financeMetrics.grossMargin.toFixed(1)}%`],
-          [isRtl ? 'إجمالي المصروفات' : 'Operating Expenses', formatCurrency(financeMetrics.expenses), `${financeMetrics.expenseRatio.toFixed(1)}%`],
-          [isRtl ? 'صافي الأرباح' : 'Net Profit', formatCurrency(financeMetrics.netProfit), `${financeMetrics.netMargin.toFixed(1)}%`],
+          [isRtl ? 'إجمالي إيرادات المبيعات' : 'Total Sales Revenue', formatCurrency(financeMetrics.revenue), formatPercent(100, 0)],
+          [isRtl ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold', formatCurrency(financeMetrics.cogs), formatPercent((financeMetrics.cogs / (financeMetrics.revenue || 1)) * 100)],
+          [isRtl ? 'مجمل الربح' : 'Gross Profit', formatCurrency(financeMetrics.grossProfit), formatPercent(financeMetrics.grossMargin)],
+          [isRtl ? 'إجمالي المصروفات' : 'Operating Expenses', formatCurrency(financeMetrics.expenses), formatPercent(financeMetrics.expenseRatio)],
+          [isRtl ? 'صافي الأرباح' : 'Net Profit', formatCurrency(financeMetrics.netProfit), formatPercent(financeMetrics.netMargin)],
           ...financeMetrics.expenseCategories.map(c => [
             `${isRtl ? 'مصروف:' : 'Expense:'} ${c.displayName}`,
             formatCurrency(c.amount),
-            `${c.percentage}%`
+            formatPercent(Number(c.percentage))
           ])
         ]
       };
@@ -502,10 +506,10 @@ const ReportsScreen: React.FC = () => {
         title: isRtl ? 'تقرير أداء فريق المبيعات' : 'Sales Team Performance Report',
         periodLabel,
         summaryCards: [
-          { label: isRtl ? 'عدد الموظفين' : 'Staff Members', value: String(staffMetrics.staffList.length) },
-          { label: isRtl ? 'إجمالي المبيعات' : 'Team Revenue', value: formatCurrency(staffMetrics.totalStaffSales) },
-          { label: isRtl ? 'إجمالي الفواتير' : 'Invoices Handled', value: String(staffMetrics.totalStaffOrders) },
-          { label: isRtl ? 'الأعلى مبيعاً' : 'Top Performer', value: staffMetrics.topPerformer?.name || '-' }
+          { label: isRtl ? 'عدد الموظفين' : 'Staff Members', value: formatNumber(staffMetrics.staffList.length) },
+          { label: isRtl ? 'إجمالي المبيعات' : 'Team Revenue', value: formatCurrency(salesMetrics.totalRevenue) },
+          { label: isRtl ? 'إجمالي الفواتير' : 'Invoices Handled', value: formatNumber(salesMetrics.totalOrders) },
+          { label: isRtl ? 'الأعلى مبيعاً' : 'Top Performer', value: staffMetrics.topSeller?.name || '-' }
         ],
         tableHeaders: [
           isRtl ? 'اسم الموظف' : 'Staff Name',
@@ -519,11 +523,11 @@ const ReportsScreen: React.FC = () => {
           s.count,
           formatCurrency(s.total),
           formatCurrency(s.average),
-          `${s.contribution.toFixed(1)}%`
+          formatPercent(s.contribution)
         ])
       };
     }
-  }, [activeTab, timeframe, filteredOrders, products, financeMetrics, staffMetrics, salesMetrics, customers, formatCurrency, formatDate, isRtl]);
+  }, [activeTab, timeframe, filteredOrders, products, financeMetrics, staffMetrics, salesMetrics, customers, formatCurrency, formatNumber, formatPercent, formatDate, isRtl]);
 
   // Safe In-Page Print Trigger -> Opens Report Print Preview Modal
   const handlePrint = () => {
@@ -614,7 +618,7 @@ const ReportsScreen: React.FC = () => {
         <div className="flex items-center gap-1 px-1 overflow-x-auto scrollbar-none">
           {[
             { id: 'today', label: isRtl ? 'اليوم' : 'Today' },
-            { id: 'week', label: isRtl ? '7 أيام' : '7 Days' },
+            { id: 'week', label: isRtl ? `${formatNumber(7)} أيام` : '7 Days' },
             { id: 'month', label: isRtl ? 'هذا الشهر' : 'This Month' },
             { id: 'last_month', label: isRtl ? 'الشهر الماضي' : 'Last Month' },
             { id: 'year', label: isRtl ? 'هذا العام' : 'Year' },
@@ -647,23 +651,23 @@ const ReportsScreen: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{t('reports.total_revenue')}</span>
-              <h3 className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white mt-2">
                 {formatCurrency(salesMetrics.totalRevenue)}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">{filteredOrders.length} {isRtl ? 'فاتورة صادرة' : 'orders processed'}</p>
+              <p className="text-xs text-slate-400 mt-1">{formatNumber(filteredOrders.length)} {isRtl ? 'فاتورة صادرة' : 'orders processed'}</p>
             </div>
 
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{t('reports.total_orders')}</span>
-              <h3 className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-2">
-                {salesMetrics.totalOrders}
+              <h3 className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white mt-2">
+                {formatNumber(salesMetrics.totalOrders)}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">{salesMetrics.totalItemsCount} {isRtl ? 'قطعة مباعة' : 'total items sold'}</p>
+              <p className="text-xs text-slate-400 mt-1">{formatNumber(salesMetrics.totalItemsCount)} {isRtl ? 'قطعة مباعة' : 'total items sold'}</p>
             </div>
 
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'متوسط قيمة الفاتورة (AOV)' : 'Average Order Value'}</span>
-              <h3 className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white mt-2">
                 {formatCurrency(salesMetrics.avgOrderValue)}
               </h3>
               <p className="text-xs text-slate-400 mt-1">{isRtl ? 'معدل سلة الشراء' : 'Basket size efficiency'}</p>
@@ -675,7 +679,7 @@ const ReportsScreen: React.FC = () => {
                 {staffMetrics.topSeller ? staffMetrics.topSeller.name : (isRtl ? 'غير محدد' : 'N/A')}
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                {staffMetrics.topSeller ? `${formatCurrency(staffMetrics.topSeller.total)} (${staffMetrics.topSeller.contribution.toFixed(0)}%)` : '-'}
+                {staffMetrics.topSeller ? `${formatCurrency(staffMetrics.topSeller.total)} (${formatPercent(staffMetrics.topSeller.contribution, 0)})` : '-'}
               </p>
             </div>
           </div>
@@ -706,7 +710,7 @@ const ReportsScreen: React.FC = () => {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                     <XAxis dataKey="name" stroke={tickColor} fontSize={11} tickLine={false} />
-                    <YAxis stroke={tickColor} fontSize={11} tickLine={false} tickFormatter={(v) => `${v}`} />
+                    <YAxis stroke={tickColor} fontSize={11} tickLine={false} tickFormatter={(v) => formatNumber(v)} />
                     <Tooltip 
                       formatter={(v: number) => formatCurrency(v)}
                       contentStyle={{
@@ -757,8 +761,8 @@ const ReportsScreen: React.FC = () => {
                         <span className="font-medium text-slate-700 dark:text-slate-300">{pm.displayName}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-slate-400">{pm.percentage}%</span>
-                        <span className="font-mono font-semibold text-slate-900 dark:text-white">{formatCurrency(pm.total)}</span>
+                        <span className="tabular-nums text-slate-400">{formatPercent(Number(pm.percentage))}</span>
+                        <span className="tabular-nums font-semibold text-slate-900 dark:text-white">{formatCurrency(pm.total)}</span>
                       </div>
                     </div>
                   ))}
@@ -790,12 +794,12 @@ const ReportsScreen: React.FC = () => {
                     const share = salesMetrics.totalRevenue > 0 ? (prod.revenue / salesMetrics.totalRevenue) * 100 : 0;
                     return (
                       <tr key={prod.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-700/40 transition">
-                        <td className="px-5 py-3.5 font-bold font-mono text-xs text-slate-400">#{index + 1}</td>
+                        <td className="px-5 py-3.5 font-bold tabular-nums text-xs text-slate-400">#{formatNumber(index + 1)}</td>
                         <td className="px-5 py-3.5 font-semibold text-slate-900 dark:text-white">{prod.name}</td>
                         <td className="px-5 py-3.5 text-xs text-slate-500">{prod.category || '-'}</td>
-                        <td className="px-5 py-3.5 text-center font-mono font-medium">{prod.quantity}</td>
-                        <td className="px-5 py-3.5 text-end font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(prod.revenue)}</td>
-                        <td className="px-5 py-3.5 text-end font-mono text-xs text-primary font-medium">{share.toFixed(1)}%</td>
+                        <td className="px-5 py-3.5 text-center tabular-nums font-medium">{formatNumber(prod.quantity)}</td>
+                        <td className="px-5 py-3.5 text-end tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(prod.revenue)}</td>
+                        <td className="px-5 py-3.5 text-end tabular-nums text-xs text-primary font-medium">{formatPercent(share)}</td>
                       </tr>
                     );
                   })}
@@ -815,15 +819,15 @@ const ReportsScreen: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'قيمة المخزون بسعر التكلفة' : 'Total Cost Valuation'}</span>
-              <h3 className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white mt-2">
                 {formatCurrency(inventoryMetrics.totalCostValuation)}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">{inventoryMetrics.totalProducts} {isRtl ? 'صنف مسجل' : 'registered products'}</p>
+              <p className="text-xs text-slate-400 mt-1">{formatNumber(inventoryMetrics.totalProducts)} {isRtl ? 'صنف مسجل' : 'registered products'}</p>
             </div>
 
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'القيمة السوقية المتوقعة (بيع)' : 'Total Retail Valuation'}</span>
-              <h3 className="text-2xl font-bold font-mono tabular-nums text-blue-600 dark:text-blue-400 mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400 mt-2">
                 {formatCurrency(inventoryMetrics.totalRetailValuation)}
               </h3>
               <p className="text-xs text-slate-400 mt-1">{isRtl ? 'عند بيع كامل المخزون المتوفر' : 'Upon full inventory clearance'}</p>
@@ -831,21 +835,21 @@ const ReportsScreen: React.FC = () => {
 
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'إجمالي الأرباح المتوقعة' : 'Unrealized Gross Profit'}</span>
-              <h3 className="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400 mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400 mt-2">
                 {formatCurrency(inventoryMetrics.unrealizedGrossProfit)}
               </h3>
               <p className="text-xs text-emerald-600 font-medium mt-1">
-                {isRtl ? 'هامش ربح متوقع' : 'Potential Margin'}: {inventoryMetrics.potentialMargin.toFixed(1)}%
+                {isRtl ? 'هامش ربح متوقع' : 'Potential Margin'}: {formatPercent(inventoryMetrics.potentialMargin)}
               </p>
             </div>
 
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'تنبيهات المخزون' : 'Stock Alerts'}</span>
               <div className="flex items-center gap-3 mt-2">
-                <span className="text-2xl font-bold font-mono text-rose-600">{inventoryMetrics.outOfStockCount}</span>
+                <span className="text-2xl font-bold tabular-nums text-rose-600">{formatNumber(inventoryMetrics.outOfStockCount)}</span>
                 <span className="text-xs text-slate-400">{isRtl ? 'نفد تماماً' : 'out of stock'}</span>
                 <span className="text-slate-300">/</span>
-                <span className="text-2xl font-bold font-mono text-amber-500">{inventoryMetrics.lowStockCount}</span>
+                <span className="text-2xl font-bold tabular-nums text-amber-500">{formatNumber(inventoryMetrics.lowStockCount)}</span>
                 <span className="text-xs text-slate-400">{isRtl ? 'منخفض' : 'low stock'}</span>
               </div>
             </div>
@@ -882,14 +886,14 @@ const ReportsScreen: React.FC = () => {
                     <div className="min-w-0 flex-1 pe-3">
                       <p className="font-semibold text-xs text-slate-900 dark:text-white truncate">{item.name}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        {item.stock} {isRtl ? 'قطعة' : 'units'} @ {formatCurrency(item.purchasePrice)}
+                        {formatNumber(item.stock)} {isRtl ? 'قطعة' : 'units'} @ {formatCurrency(item.purchasePrice)}
                       </p>
                     </div>
                     <div className="text-end">
-                      <p className="font-mono font-bold text-xs text-slate-900 dark:text-white">
+                      <p className="tabular-nums font-bold text-xs text-slate-900 dark:text-white">
                         {formatCurrency(item.totalCostValue)}
                       </p>
-                      <p className="text-[10px] text-emerald-600 font-mono">
+                      <p className="text-[10px] text-emerald-600 tabular-nums">
                         {isRtl ? 'البيع:' : 'Retail:'} {formatCurrency(item.totalRetailValue)}
                       </p>
                     </div>
@@ -910,19 +914,19 @@ const ReportsScreen: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'إجمالي الدخل (المبيعات)' : 'Gross Revenue'}</span>
-              <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white mt-2">
                 {formatCurrency(financeMetrics.revenue)}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">100% {isRtl ? 'قاعدة الإيرادات' : 'revenue base'}</p>
+              <p className="text-xs text-slate-400 mt-1">{formatPercent(100, 0)} {isRtl ? 'قاعدة الإيرادات' : 'revenue base'}</p>
             </div>
 
             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
               <span className="text-xs font-medium text-slate-500">{isRtl ? 'الربح الإجمالي (Gross Profit)' : 'Gross Profit'}</span>
-              <h3 className="text-2xl font-bold font-mono text-blue-600 dark:text-blue-400 mt-2">
+              <h3 className="text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400 mt-2">
                 {formatCurrency(financeMetrics.grossProfit)}
               </h3>
               <p className="text-xs text-blue-600 font-semibold mt-1">
-                {isRtl ? 'هامش الربح الإجمالي' : 'Gross Margin'}: {financeMetrics.grossMargin.toFixed(1)}%
+                {isRtl ? 'هامش الربح الإجمالي' : 'Gross Margin'}: {formatPercent(financeMetrics.grossMargin)}
               </p>
             </div>
 
@@ -934,13 +938,13 @@ const ReportsScreen: React.FC = () => {
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {isRtl ? 'صافي الربح النهائي (Net Profit)' : 'Operating Net Profit'}
               </span>
-              <h3 className={`text-2xl font-bold font-mono mt-2 ${
+              <h3 className={`text-2xl font-bold tabular-nums mt-2 ${
                 financeMetrics.netProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'
               }`}>
                 {formatCurrency(financeMetrics.netProfit)}
               </h3>
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-1">
-                {isRtl ? 'هامش صافي الربح' : 'Net Margin'}: {financeMetrics.netMargin.toFixed(1)}%
+                {isRtl ? 'هامش صافي الربح' : 'Net Margin'}: {formatPercent(financeMetrics.netMargin)}
               </p>
             </div>
           </div>
@@ -957,21 +961,21 @@ const ReportsScreen: React.FC = () => {
             <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
               {/* Revenue */}
               <div className="py-3 flex items-center justify-between font-medium">
-                <span className="text-slate-900 dark:text-white">1. {isRtl ? 'إجمالي إيرادات المبيعات' : 'Gross Sales Revenue'}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(financeMetrics.revenue)}</span>
+                <span className="text-slate-900 dark:text-white">{formatNumber(1)}. {isRtl ? 'إجمالي إيرادات المبيعات' : 'Gross Sales Revenue'}</span>
+                <span className="tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(financeMetrics.revenue)}</span>
               </div>
 
               {/* COGS */}
               <div className="py-3 flex items-center justify-between font-medium text-slate-600 dark:text-slate-400 ps-4">
                 <span>(-) {isRtl ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold (COGS)'}</span>
-                <span className="font-mono text-amber-600">({formatCurrency(financeMetrics.cogs)})</span>
+                <span className="tabular-nums text-amber-600">({formatCurrency(financeMetrics.cogs)})</span>
               </div>
 
               {/* Gross Profit */}
               <div className="py-3 flex items-center justify-between font-bold bg-slate-50 dark:bg-slate-900/60 px-3 rounded-lg">
                 <span className="text-blue-600 dark:text-blue-400">= {isRtl ? 'إجمالي الربح (Gross Profit)' : 'Gross Profit'}</span>
-                <span className="font-mono text-blue-600 dark:text-blue-400">
-                  {formatCurrency(financeMetrics.grossProfit)} ({financeMetrics.grossMargin.toFixed(1)}%)
+                <span className="tabular-nums text-blue-600 dark:text-blue-400">
+                  {formatCurrency(financeMetrics.grossProfit)} ({formatPercent(financeMetrics.grossMargin)})
                 </span>
               </div>
 
@@ -984,14 +988,14 @@ const ReportsScreen: React.FC = () => {
               {financeMetrics.expenseCategories.map(cat => (
                 <div key={cat.name} className="py-2.5 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 ps-6">
                   <span>{cat.displayName}</span>
-                  <span className="font-mono text-rose-500">({formatCurrency(cat.amount)})</span>
+                  <span className="tabular-nums text-rose-500">({formatCurrency(cat.amount)})</span>
                 </div>
               ))}
 
               {/* Total Expenses */}
               <div className="py-3 flex items-center justify-between font-medium text-slate-700 dark:text-slate-300 ps-4">
                 <span>(-) {isRtl ? 'إجمالي المصروفات التشغيلية' : 'Total Operating Expenses'}</span>
-                <span className="font-mono text-rose-600">({formatCurrency(financeMetrics.expenses)})</span>
+                <span className="tabular-nums text-rose-600">({formatCurrency(financeMetrics.expenses)})</span>
               </div>
 
               {/* Final Net Profit */}
@@ -1001,8 +1005,8 @@ const ReportsScreen: React.FC = () => {
                   : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300'
               }`}>
                 <span>= {isRtl ? 'صافي الربح التشغيلي (Net Profit)' : 'Net Operating Profit'}</span>
-                <span className="font-mono text-lg">
-                  {formatCurrency(financeMetrics.netProfit)} ({financeMetrics.netMargin.toFixed(1)}%)
+                <span className="tabular-nums text-lg">
+                  {formatCurrency(financeMetrics.netProfit)} ({formatPercent(financeMetrics.netMargin)})
                 </span>
               </div>
             </div>
@@ -1030,13 +1034,13 @@ const ReportsScreen: React.FC = () => {
                     {staffMetrics.topSeller.name}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    {staffMetrics.topSeller.count} {isRtl ? 'طلبات مكتملة' : 'completed orders'} · {isRtl ? 'المساهمة:' : 'Contribution:'} {staffMetrics.topSeller.contribution.toFixed(1)}%
+                    {formatNumber(staffMetrics.topSeller.count)} {isRtl ? 'طلبات مكتملة' : 'completed orders'} · {isRtl ? 'المساهمة:' : 'Contribution:'} {formatPercent(staffMetrics.topSeller.contribution)}
                   </p>
                 </div>
               </div>
               <div className="text-start sm:text-end">
                 <span className="text-xs text-slate-400">{isRtl ? 'إجمالي المحقق' : 'Achieved Revenue'}</span>
-                <h4 className="text-2xl font-bold font-mono text-primary">
+                <h4 className="text-2xl font-bold tabular-nums text-primary">
                   {formatCurrency(staffMetrics.topSeller.total)}
                 </h4>
               </div>
@@ -1070,12 +1074,12 @@ const ReportsScreen: React.FC = () => {
                           <span className="font-semibold text-slate-900 dark:text-white">{emp.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-center font-mono">{emp.count}</td>
-                      <td className="px-5 py-4 text-end font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(emp.total)}</td>
-                      <td className="px-5 py-4 text-end font-mono text-slate-500">{formatCurrency(emp.average)}</td>
+                      <td className="px-5 py-4 text-center tabular-nums">{formatNumber(emp.count)}</td>
+                      <td className="px-5 py-4 text-end tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(emp.total)}</td>
+                      <td className="px-5 py-4 text-end tabular-nums text-slate-500">{formatCurrency(emp.average)}</td>
                       <td className="px-5 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
-                          <span className="font-mono text-xs font-semibold text-primary">{emp.contribution.toFixed(1)}%</span>
+                          <span className="tabular-nums text-xs font-semibold text-primary">{formatPercent(emp.contribution)}</span>
                           <div className="w-16 bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                             <div className="bg-primary h-full rounded-full" style={{ width: `${emp.contribution}%` }} />
                           </div>
