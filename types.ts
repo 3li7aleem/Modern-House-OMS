@@ -136,6 +136,7 @@ export interface Product {
 
 export interface OrderItem {
   productId: string;
+  name?: string;
   quantity: number;
   price: number;
   vatPercent?: number;
@@ -277,6 +278,11 @@ export interface AppNotification {
 export interface RequestItem {
     productId: string;
     quantity: number;
+    name?: string;
+    sku?: string;
+    estimatedPrice?: number;
+    isCustom?: boolean;
+    notes?: string;
 }
 
 export interface Request {
@@ -287,4 +293,7 @@ export interface Request {
     date: string;
     items: RequestItem[];
     status: 'Pending' | 'Processing' | 'Completed' | 'Cancelled';
+    notes?: string;
+    source?: 'website' | 'showroom';
+    isOutOfStockRequest?: boolean;
 }

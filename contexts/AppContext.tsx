@@ -492,6 +492,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   data.id
               );
           }
+
+          if (creatingFromRequestId) {
+              await RequestService.update(creatingFromRequestId, { status: 'Completed' } as any);
+          }
           
           return data.id;
       } catch (e: any) {
@@ -821,9 +825,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const addRequest = async (requestData: Omit<Request, 'id' | 'date' | 'status'>) => {
       try {
-          const newRequest = await RequestService.add({ ...requestData, date: new Date().toISOString(), status: 'Pending' } as any);
+          const sanitizedItems = (requestData.items || []).map(item =>
+              Object.fromEntries(Object.entries(item).filter(([_, v]) => v !== undefined))
+          );
+          const sanitizedRequest = Object.fromEntries(
+              Object.entries({ ...requestData, items: sanitizedItems }).filter(([_, v]) => v !== undefined)
+          );
+          const newRequest = await RequestService.add({ ...sanitizedRequest, date: new Date().toISOString(), status: 'Pending' } as any);
           await addNotification(
-              'header.notifications.new_website_request',
+              requestData.source === 'showroom'
+                  ? 'header.notifications.new_customer_request'
+                  : 'header.notifications.new_website_request',
               'requests',
               { customerName: requestData.customerName },
               newRequest?.id || ''
@@ -848,7 +860,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const updateRequest = async (requestId: string, updatedData: Partial<Request>) => {
       try {
-          await RequestService.update(requestId, updatedData);
+          const payload = { ...updatedData };
+          if (payload.items) {
+              payload.items = payload.items.map(item =>
+                  Object.fromEntries(Object.entries(item).filter(([_, v]) => v !== undefined))
+              ) as any;
+          }
+          const sanitized = Object.fromEntries(
+              Object.entries(payload).filter(([_, v]) => v !== undefined)
+          );
+          await RequestService.update(requestId, sanitized as any);
       } catch (e) {
           console.error("Failed to update request", e);
           throw e;
@@ -927,6 +948,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           const orderItems: import('../types').OrderItem[] = quotation.items.map(item => ({
               productId: item.productId || `custom_${Date.now()}`,
+              ...(item.name ? { name: item.name } : {}),
               quantity: item.quantity,
               price: item.unitPrice,
               vatPercent: item.vatPercent || 0,

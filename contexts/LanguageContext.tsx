@@ -103,6 +103,7 @@ const enTranslations = {
             "low_stock_item": "{{name}} is low on stock ({{stock}} left).",
             "new_delivery_request": "New delivery request for order #{{orderNumber}} for customer {{customerName}}.",
             "new_website_request": "New website request from {{customerName}}.",
+            "new_customer_request": "New customer request from {{customerName}}.",
             "no_notifications": "No new notifications"
         },
         "view_website": "View Website",
@@ -664,9 +665,20 @@ const enTranslations = {
     },
     "requests": {
         "title": "Customer Requests",
+        "subtitle": "Manage incoming website orders and out-of-stock or special-order item requests",
+        "add_button": "Add New Request",
+        "add_out_of_stock_hint": "Request an item not available in stock",
+        "search_placeholder": "Search by customer, phone, or requested item...",
+        "filter_all": "All",
+        "filter_out_of_stock": "Out of Stock / Special",
+        "empty_state": "No customer requests found",
+        "out_of_stock_badge": "Out of Stock",
+        "custom_item_badge": "Not in Inventory",
+        "delete_confirmation": "Are you sure you want to delete this customer request?",
         "table": {
             "customer": "Customer",
             "phone": "Phone",
+            "items": "Requested Items",
             "date": "Date",
             "status": "Status",
             "actions": "Actions",
@@ -688,8 +700,30 @@ const enTranslations = {
             "requested_items": "Requested Items",
             "product": "Product",
             "quantity": "Quantity",
+            "estimated_price": "Estimated Price",
+            "notes": "Notes",
             "close": "Close",
             "cancel_button": "Cancel Request"
+        },
+        "edit_modal": {
+            "title": "Edit Customer Request",
+            "add_title": "New Customer Request (Out of Stock / Special Order)",
+            "add_subtitle": "Record a customer request for an unlisted product or an out-of-stock catalog item",
+            "customer_lookup": "Quick Select Existing Customer (Optional)",
+            "customer_lookup_placeholder": "Choose an existing customer or enter details manually...",
+            "item_mode_custom": "Not in Inventory (Special Item)",
+            "item_mode_catalog": "Catalog Product",
+            "custom_item_name": "Requested Product / Model Name *",
+            "custom_item_placeholder": "e.g., Built-in 90cm Oven Stainless...",
+            "sku": "Model / SKU (Optional)",
+            "estimated_price": "Est. Price (BHD)",
+            "item_notes": "Item Specs / Notes (Optional)",
+            "request_notes": "General Request Notes (Deposit, expected arrival...)",
+            "mark_out_of_stock": "Mark as Out-of-Stock / Backorder Request",
+            "no_items": "Please add at least one requested item with a valid name."
+        },
+        "print_modal": {
+            "title": "Print Customer Request"
         }
     },
     "settings": {
@@ -845,6 +879,7 @@ const arTranslations = {
             "low_stock_item": "{{name}} على وشك النفاد (المتبقي: {{stock}}).",
             "new_delivery_request": "طلب توصيل جديد للطلب #{{orderNumber}} للعميل {{customerName}}.",
             "new_website_request": "طلب جديد من الموقع من {{customerName}}.",
+            "new_customer_request": "طلب عميل جديد من {{customerName}}.",
             "no_notifications": "لا توجد إشعارات جديدة"
         },
         "view_website": "عرض الموقع",
@@ -1406,9 +1441,20 @@ const arTranslations = {
     },
     "requests": {
         "title": "طلبات العملاء",
+        "subtitle": "إدارة طلبات الموقع الإلكتروني وتسجيل طلبات الأصناف غير المتوفرة في المخزون",
+        "add_button": "إضافة طلب جديد",
+        "add_out_of_stock_hint": "طلب صنف غير متوفر في المخزون أو طلب خاص",
+        "search_placeholder": "ابحث باسم العميل أو رقم الهاتف أو الصنف المطلوب...",
+        "filter_all": "الكل",
+        "filter_out_of_stock": "غير متوفر بالمخزون",
+        "empty_state": "لا توجد طلبات مسجلة حالياً",
+        "out_of_stock_badge": "غير متوفر بالمخزون",
+        "custom_item_badge": "غير مدرج بالمخزون",
+        "delete_confirmation": "هل أنت متأكد من حذف هذا الطلب؟",
         "table": {
             "customer": "العميل",
             "phone": "الهاتف",
+            "items": "الأصناف المطلوبة",
             "date": "التاريخ",
             "status": "الحالة",
             "actions": "الإجراءات",
@@ -1430,8 +1476,30 @@ const arTranslations = {
             "requested_items": "الأصناف المطلوبة",
             "product": "المنتج",
             "quantity": "الكمية",
+            "estimated_price": "السعر التقديري",
+            "notes": "ملاحظات",
             "close": "إغلاق",
             "cancel_button": "إلغاء الطلب"
+        },
+        "edit_modal": {
+            "title": "تعديل طلب العميل",
+            "add_title": "إضافة طلب جديد (صنف غير متوفر بالمخزون)",
+            "add_subtitle": "تسجيل طلب عميل لصنف غير متوفر في المخزون أو غير مدرج في الكتالوج",
+            "customer_lookup": "اختيار سريع لعميل مسجل (اختياري)",
+            "customer_lookup_placeholder": "ابحث باسم العميل أو رقم الهاتف للتعبئة التلقائية...",
+            "item_mode_custom": "غير متوفر بالمخزون / طلب خاص",
+            "item_mode_catalog": "منتج من الكتالوج",
+            "custom_item_name": "اسم الصنف / الموديل المطلوب *",
+            "custom_item_placeholder": "مثال: فرن بلت إن 90 سم ستانلس ستيل...",
+            "sku": "الكود / الموديل",
+            "estimated_price": "السعر التقديري (د.ب)",
+            "item_notes": "مواصفات إضافية (اختياري)",
+            "request_notes": "ملاحظات الطلب (عربون، موعد الوصول المتوقع...)",
+            "mark_out_of_stock": "تمييز كطلب صنف غير متوفر بالمخزون / طلب خاص",
+            "no_items": "يرجى إضافة صنف واحد على الأقل مع كتابة اسمه."
+        },
+        "print_modal": {
+            "title": "طباعة طلب العميل"
         }
     },
      "settings": {

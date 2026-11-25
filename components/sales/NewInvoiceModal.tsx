@@ -71,15 +71,24 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
         setSearchQuery(`${requestToConvert.customerName} (${requestToConvert.customerPhone})`);
       }
 
-      const requestedItems = requestToConvert.items.map(item => {
+      const requestedItems = requestToConvert.items.map((item, idx) => {
         const product = products.find(p => p.id === item.productId);
+        if (product && !item.isCustom) {
+          return {
+            productId: product.id,
+            name: product.name,
+            quantity: item.quantity,
+            price: item.estimatedPrice ?? product.salePrice ?? 0,
+          };
+        }
         return {
-          productId: item.productId,
+          productId: item.productId && item.productId.startsWith('custom_') ? item.productId : `custom_${Date.now()}_${idx}`,
+          name: item.name || item.sku || 'صنف غير مدرج',
           quantity: item.quantity,
-          price: product?.salePrice || 0,
+          price: item.estimatedPrice ?? 0,
         };
-      }).filter(Boolean);
-      setItems(requestedItems);
+      });
+      setItems(requestedItems.length > 0 ? requestedItems : [{ productId: '', quantity: 1 }]);
       
       if(requestToConvert.customerAddress) {
           setDeliveryOption('charge');
@@ -176,9 +185,15 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
         item.productId = String(value);
         const product = products.find(p => p.id === String(value));
         item.price = product ? product.salePrice : 0;
+        item.name = product?.name;
         item.quantity = 1;
+    } else if (field === 'price') {
+        item.price = Math.max(0, Number(value) || 0);
+    } else if (field === 'name') {
+        item.name = String(value);
     } else if (field === 'quantity') {
-        const product = products.find(p => p.id === item.productId);
+        const isCustomItem = Boolean(item.productId?.startsWith('custom_'));
+        const product = !isCustomItem ? products.find(p => p.id === item.productId) : undefined;
         if (product) {
           const totalAvailable = availableStockForProduct(product);
           const quantityInCart = getQuantityInCart(product.id, index);
@@ -199,14 +214,15 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
 
   const subtotal = useMemo(() => {
     return items.reduce((acc, item) => {
-        const product = products.find(p => p.id === item.productId);
-        return acc + (product ? product.salePrice * (item.quantity || 0) : 0);
+        const product = !item.productId?.startsWith('custom_') ? products.find(p => p.id === item.productId) : undefined;
+        const unitPrice = item.price !== undefined ? item.price : (product ? product.salePrice : 0);
+        return acc + (unitPrice * (item.quantity || 0));
     }, 0);
   }, [items, products]);
 
   const totalPurchaseCost = useMemo(() => {
     return items.reduce((acc, item) => {
-      const product = products.find(p => p.id === item.productId);
+      const product = !item.productId?.startsWith('custom_') ? products.find(p => p.id === item.productId) : undefined;
       return acc + (product ? product.purchasePrice * (item.quantity || 0) : 0);
     }, 0);
   }, [items, products]);
@@ -249,10 +265,13 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
   }
 
   const handleSaveNewCustomer = async (customerData: Omit<Customer, 'id' | 'joinDate'>) => {
-    const newCustomer = await addCustomer(customerData);
+    const newCustomerId = await addCustomer(customerData);
     setIsAddCustomerModalOpen(false);
-    if (newCustomer) {
-      handleSelectCustomer(newCustomer);
+    if (newCustomerId) {
+      const resolvedId = typeof newCustomerId === 'string' ? newCustomerId : (newCustomerId as any).id;
+      setCustomerId(resolvedId);
+      setSearchQuery(customerData.name);
+      setIsSearchFocused(false);
     }
   };
 
@@ -297,16 +316,16 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
 
     if (!finalCustomerId && requestToConvert) {
       // It's a new customer from a request, create them first
-      const newCustomer = await addCustomer({
+      const createdCustomerId = await addCustomer({
         name: requestToConvert.customerName,
         phone: requestToConvert.customerPhone,
         address: requestToConvert.customerAddress,
       });
-      if (!newCustomer) {
+      if (!createdCustomerId) {
         alert('Failed to create new customer profile.');
         return;
       }
-      finalCustomerId = newCustomer.id;
+      finalCustomerId = typeof createdCustomerId === 'string' ? createdCustomerId : (createdCustomerId as any).id;
     }
 
 
@@ -321,13 +340,14 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
     }
 
     const finalItems: OrderItem[] = items
-      .filter(item => item.productId && item.quantity && item.price && item.quantity > 0)
+      .filter(item => item.productId && item.quantity && item.price !== undefined && item.price >= 0 && item.quantity > 0)
       .map(item => {
           const discountFactor = 1 - (discount / 100);
           const itemNetTotal = (item.price! * item.quantity!) * discountFactor;
           const itemVatAmount = isVatEnabled ? itemNetTotal * (vatPercent / 100) : 0;
           return {
               productId: item.productId!,
+              ...(item.name ? { name: item.name } : {}),
               quantity: item.quantity!,
               price: item.price!,
               vatPercent: isVatEnabled ? vatPercent : 0,
@@ -441,21 +461,36 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
                 <h4 className="text-lg font-semibold mb-2 text-text-primary dark:text-dark-text-primary">{t('orders.modal.items')}</h4>
                 <div className="space-y-2">
                 {items.map((item, index) => {
-                    const productForItem = item.productId ? products.find(p => p.id === item.productId) : null;
+                    const isCustomItem = Boolean(item.productId?.startsWith('custom_'));
+                    const productForItem = !isCustomItem && item.productId ? products.find(p => p.id === item.productId) : null;
                     const totalAvailable = productForItem ? availableStockForProduct(productForItem) : 0;
                     const quantityInCartForItem = productForItem ? getQuantityInCart(productForItem.id, index) : 0;
                     const availableStockForItem = totalAvailable - quantityInCartForItem;
                     
                     return (
                     <div key={index} className="grid grid-cols-12 gap-2 items-start">
-                        <select
-                            className="col-span-5 bg-background border border-border text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white"
-                            value={item.productId}
-                            onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-                        >
-                             <option value="">{t('orders.modal.select_product')}</option>
-                            {activeProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
+                        {isCustomItem ? (
+                            <div className="col-span-5 space-y-1">
+                                <input
+                                    type="text"
+                                    value={item.name || ''}
+                                    onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                                    className="bg-background border border-amber-400/60 text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:text-white"
+                                />
+                                <span className="inline-block text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                                    {t('requests.custom_item_badge') || 'Custom / Not in Inventory'}
+                                </span>
+                            </div>
+                        ) : (
+                            <select
+                                className="col-span-5 bg-background border border-border text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white"
+                                value={item.productId}
+                                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
+                            >
+                                <option value="">{t('orders.modal.select_product')}</option>
+                                {activeProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        )}
                         <div className="col-span-2">
                             <input
                                 type="number"
@@ -463,17 +498,30 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ onClose, onSave, requestT
                                 className="bg-background border border-border text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white"
                                 value={item.quantity}
                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                min="0"
-                                max={availableStockForItem}
+                                min={isCustomItem ? 1 : 0}
+                                max={isCustomItem ? undefined : availableStockForItem}
                                 disabled={!item.productId}
                             />
                             {productForItem && (
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className={`text-xs mt-1 ${availableStockForItem <= 0 ? 'text-rose-500 font-semibold' : 'text-gray-500'}`}>
                                     {t('orders.modal.in_stock')}: {availableStockForItem}
                                 </p>
                             )}
                         </div>
-                        <div className="col-span-2 p-2.5 text-sm text-right text-text-secondary dark:text-dark-text-secondary">{formatCurrency(item.price || 0)}</div>
+                        <div className="col-span-2">
+                            {isCustomItem ? (
+                                <input
+                                    type="number"
+                                    step="0.001"
+                                    min="0"
+                                    value={item.price ?? 0}
+                                    onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                                    className="bg-background border border-border text-text-primary text-sm text-right rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-background dark:border-dark-border dark:text-white"
+                                />
+                            ) : (
+                                <div className="p-2.5 text-sm text-right text-text-secondary dark:text-dark-text-secondary">{formatCurrency(item.price || 0)}</div>
+                            )}
+                        </div>
                         <div className="col-span-2 p-2.5 text-sm text-right font-semibold text-text-primary dark:text-dark-text-primary">{formatCurrency((item.price || 0) * (item.quantity || 0))}</div>
                         <button onClick={() => handleRemoveItem(index)} className="col-span-1 text-red-500 hover:text-red-700 mt-2">&times;</button>
                     </div>

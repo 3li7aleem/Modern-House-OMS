@@ -104,7 +104,7 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
     const itemsSummary = order.items
       .map(item => {
         const prod = products.find(p => p.id === item.productId);
-        const name = prod ? prod.name : 'Item';
+        const name = prod?.name || item.name || 'Item';
         return `• ${name} (x${item.quantity}) - ${formatCurrency(item.price * item.quantity)}`;
       })
       .join('\n');
@@ -129,7 +129,7 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
         customerName: customer?.name || order.customerName || 'عميل نقدي',
         customerPhone: customer?.phone || order.customerPhone || '',
         items: (order.items || []).map(it => {
-          const prod = productMap.get(it.productId);
+          const prod = products.find(p => p.id === it.productId);
           return {
             name: prod?.name || it.name || 'صنف',
             sku: prod?.sku || '',
@@ -287,7 +287,7 @@ const PosThermalReceiptModal: React.FC<PosThermalReceiptModalProps> = ({
               <div className="pt-1.5 space-y-1.5">
                 {order.items.map((item, idx) => {
                   const prod = products.find(p => p.id === item.productId);
-                  const itemName = prod?.name || `Item #${idx + 1}`;
+                  const itemName = prod?.name || item.name || `Item #${idx + 1}`;
                   const itemTotal = item.price * item.quantity;
                   return (
                     <div key={idx} className="space-y-0.5">

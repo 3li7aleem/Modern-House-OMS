@@ -144,7 +144,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   return (
                     <tr key={index} className="hover:bg-gray-50/40 dark:hover:bg-gray-700/20">
                       <td className="px-4 py-3.5 font-medium text-gray-900 dark:text-white">
-                        {product?.name || 'Unknown Product'}
+                        {product?.name || item.name || 'Unknown Product'}
                       </td>
                       <td className="px-4 py-3.5 text-center text-gray-900 dark:text-white">
                         {item.quantity}
