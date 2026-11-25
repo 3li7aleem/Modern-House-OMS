@@ -77,8 +77,6 @@ interface SettingsContextType {
     updateHeroImageUrl: (url: string) => void;
     voiceGreetingEnabled: boolean;
     updateVoiceGreetingEnabled: (enabled: boolean) => void;
-    entranceSupplicationEnabled: boolean;
-    updateEntranceSupplicationEnabled: (enabled: boolean) => void;
     whatsAppSettings: WhatsAppConfig;
     updateWhatsAppSettings: (settings: Partial<WhatsAppConfig>) => void;
     settings: SettingsContextType; // For easy passing
@@ -96,7 +94,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [deliveryNoteThankYou, setDeliveryNoteThankYou] = useState(DEFAULT_DELIVERY_THANK_YOU);
     const [heroImageUrl, setHeroImageUrl] = useState(DEFAULT_HERO_IMAGE_URL);
     const [voiceGreetingEnabled, setVoiceGreetingEnabled] = useState(true);
-    const [entranceSupplicationEnabled, setEntranceSupplicationEnabled] = useState(true);
     const [whatsAppSettings, setWhatsAppSettings] = useState<WhatsAppConfig>(DEFAULT_WHATSAPP_CONFIG);
 
     useEffect(() => {
@@ -110,7 +107,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const savedThankYou = localStorage.getItem('settings:deliveryThankYou');
         const savedHeroImage = localStorage.getItem('settings:heroImageUrl');
         const savedVoiceGreeting = localStorage.getItem('settings:voiceGreetingEnabled');
-        const savedSupplication = localStorage.getItem('settings:entranceSupplicationEnabled');
 
         if (savedLogo) setLogoUrl(savedLogo);
         if (savedFooter) setFooterText(savedFooter);
@@ -134,9 +130,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
         if (savedVoiceGreeting !== null) {
             setVoiceGreetingEnabled(savedVoiceGreeting === 'true');
-        }
-        if (savedSupplication !== null) {
-            setEntranceSupplicationEnabled(savedSupplication === 'true');
         }
     }, []);
 
@@ -186,11 +179,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('settings:voiceGreetingEnabled', String(enabled));
     };
 
-    const updateEntranceSupplicationEnabled = (enabled: boolean) => {
-        setEntranceSupplicationEnabled(enabled);
-        localStorage.setItem('settings:entranceSupplicationEnabled', String(enabled));
-    };
-
     const updateWhatsAppSettings = (newSettings: Partial<WhatsAppConfig>) => {
         const updated = saveStoredWhatsAppConfig(newSettings);
         setWhatsAppSettings(updated);
@@ -216,8 +204,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             updateHeroImageUrl,
             voiceGreetingEnabled,
             updateVoiceGreetingEnabled,
-            entranceSupplicationEnabled,
-            updateEntranceSupplicationEnabled,
             whatsAppSettings,
             updateWhatsAppSettings,
             get settings() { return self; }
@@ -233,7 +219,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deliveryNoteThankYou,
         heroImageUrl,
         voiceGreetingEnabled,
-        entranceSupplicationEnabled,
         whatsAppSettings
     ]);
 

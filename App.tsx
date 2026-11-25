@@ -26,7 +26,7 @@ import SetupWizardModal from './components/setup/SetupWizardModal';
 import { useAppContext } from './contexts/AppContext';
 import { useTranslation } from './contexts/LanguageContext';
 import { useSettings } from './contexts/SettingsContext';
-import { Bell, X, Sparkles, Download } from 'lucide-react';
+import { Bell, X, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const LoadingSpinner: React.FC = () => (
@@ -56,13 +56,12 @@ const App: React.FC = () => {
   } = useAppContext();
 
   const { t, language } = useTranslation();
-  const { voiceGreetingEnabled, entranceSupplicationEnabled } = useSettings();
+  const { voiceGreetingEnabled } = useSettings();
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
   const [toasts, setToasts] = useState<AppToast[]>([]);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(new Set());
   const [isFirstRequestsLoad, setIsFirstRequestsLoad] = useState(true);
-  const [showSupplication, setShowSupplication] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<{
     version: string;
     downloadUrl: string;
@@ -91,9 +90,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (currentUser) {
-      if (entranceSupplicationEnabled) {
-        setShowSupplication(true);
-      }
       try {
         if (voiceGreetingEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
           window.speechSynthesis.cancel();
@@ -103,12 +99,8 @@ const App: React.FC = () => {
           window.speechSynthesis.speak(greeting);
         }
       } catch {}
-      const timer = setTimeout(() => setShowSupplication(false), 8000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowSupplication(false);
     }
-  }, [currentUser?.id, voiceGreetingEnabled, entranceSupplicationEnabled]);
+  }, [currentUser?.id, voiceGreetingEnabled]);
 
   useEffect(() => {
     // Session check bypassed to deactivate login
@@ -276,44 +268,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      {showSupplication && entranceSupplicationEnabled && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[150] w-[92%] max-w-xl animate-fade-in-scale">
-          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-amber-500/60 text-white p-4 sm:p-5 rounded-3xl shadow-2xl shadow-amber-950/50 backdrop-blur-xl flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5 flex-1 min-w-0">
-              <div className="p-3 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-2xl shrink-0 shadow-inner">
-                <Sparkles className="w-6 h-6 animate-pulse" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-amber-400">دعاء دخول المنظومة والمعرض</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">مودرن هاوس</span>
-                </div>
-                <div className="text-sm sm:text-base font-black tracking-wide text-white font-sans leading-relaxed">
-                  «بِسْمِ اللَّهِ وَلَجْنَا، وَبِسْمِ اللَّهِ خَرَجْنَا، وَعَلَى اللَّهِ رَبِّنَا تَوَكَّلْنَا»
-                </div>
-              </div>
-            </div>
-
-            {/* Clear, Prominent Close Button */}
-            <button 
-              type="button"
-              onClick={() => {
-                setShowSupplication(false);
-                try {
-                  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                  }
-                } catch {}
-              }}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-95 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/30 transition shrink-0 cursor-pointer"
-              title="إغلاق التنبيه وإيقاف الصوت"
-            >
-              <span>إغلاق</span>
-              <X className="w-4 h-4 stroke-[3]" />
-            </button>
-          </div>
-        </div>
-      )}
       <div className="flex h-[100dvh] min-h-[100dvh] text-foreground font-sans relative overflow-hidden">
         <MobileSidebar isMobileMenuOpen={isMobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
         <Sidebar />
