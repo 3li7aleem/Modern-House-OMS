@@ -26,7 +26,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
-  Bot
+  Bot,
+  Cloud
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -256,15 +257,17 @@ const Header: React.FC = () => {
             <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" aria-hidden="true" />
           </button>
 
-          {/* Live Sync Status Pill */}
-          <div 
+          {/* Live Sync Status Icon Button */}
+          <button
+            type="button"
             onClick={() => setIsHealthModalOpen(true)}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold cursor-pointer hover:bg-emerald-500/20 transition select-none"
-            title={isAr ? 'مركز صحة النظام والمزامنة' : 'System Health & Sync Center'}
+            className="relative p-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none transition select-none cursor-pointer"
+            title={isAr ? 'محلي وسحابي متصل — مركز صحة النظام والمزامنة' : 'Cloud & Local Synced — System Health & Sync Center'}
+            aria-label={isAr ? 'محلي وسحابي متصل' : 'Cloud & Local Synced'}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{isAr ? 'محلي وسحابي متصل' : 'Cloud & Local Synced'}</span>
-          </div>
+            <Cloud className="w-5 h-5" aria-hidden="true" />
+            <span className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse" aria-hidden="true" />
+          </button>
 
           {/* WhatsApp & MCP Quick Pill */}
           <button
