@@ -774,7 +774,12 @@ const enTranslations = {
         "edit": "Edit",
         "delete": "Delete",
         "deactivate": "Deactivate",
-        "activate": "Activate"
+        "activate": "Activate",
+        "cancel_button": "Cancel",
+        "save": "Save Changes",
+        "saving": "Saving...",
+        "details": "Details",
+        "required_fields": "Please fill in all required fields."
     }
 };
 
@@ -1550,7 +1555,12 @@ const arTranslations = {
         "edit": "تعديل",
         "delete": "حذف",
         "deactivate": "تعطيل",
-        "activate": "تفعيل"
+        "activate": "تفعيل",
+        "cancel_button": "إلغاء",
+        "save": "حفظ التغييرات",
+        "saving": "جاري الحفظ...",
+        "details": "التفاصيل",
+        "required_fields": "يرجى تعبئة جميع الحقول المطلوبة."
     }
 };
 
