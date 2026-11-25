@@ -245,17 +245,15 @@ const Header: React.FC = () => {
         
         {/* Right side Actions (Mobile & Desktop) */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Executive AI Copilot Action Pill */}
+          {/* Executive AI Copilot Action Icon Button */}
           <button
             type="button"
             onClick={() => setIsAiCopilotOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600/10 via-amber-500/10 to-purple-600/10 dark:from-purple-500/20 dark:to-amber-500/20 border border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-bold hover:border-purple-500/50 hover:shadow-xs transition select-none cursor-pointer group"
+            className="p-2 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500 focus:outline-none transition select-none cursor-pointer group"
             title={isAr ? 'المساعد التنفيذي الذكي (Gemini AI)' : 'Executive AI Copilot (Gemini)'}
+            aria-label={isAr ? 'المساعد التنفيذي الذكي' : 'Executive AI Copilot'}
           >
-            <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
-            <span className="hidden sm:inline font-black bg-gradient-to-r from-purple-700 to-amber-600 dark:from-purple-300 dark:to-amber-400 bg-clip-text text-transparent">
-              {isAr ? 'المساعد الذكي ✨' : 'AI Copilot ✨'}
-            </span>
+            <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" aria-hidden="true" />
           </button>
 
           {/* Live Sync Status Pill */}
